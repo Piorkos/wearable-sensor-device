@@ -8,8 +8,19 @@
 const int addr = 0x10;
 const int max_read = 250;
 
+
+
+
 namespace pa1010d
 {
+    int gps_fix_count{0};
+    int read_gps_flag{0};
+    char numcommand[max_read];
+    std::string latitude{"zero"};
+    std::string longitude{"zero"};
+    std::string utc_time{"zero"};
+    // char init_command[] = "$PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n";
+
     void pa1010d_write_command(i2c_inst_t *i2c, const char command[], int com_length) 
     {
         // Convert character array to bytes for writing
@@ -57,16 +68,16 @@ namespace pa1010d
         if (strcmp(protocol, "GNRMC") == 0) {
             
             // printf("Protcol:%s\n", gps_data[0]);
-            // printf("UTC Time: %s\n", gps_data[1]);
-            // printf("Status: %s\n", gps_data[2]);
-            // printf("Latitude: %s\n", gps_data[3]);
-            // printf("N/S indicator: %s\n", gps_data[4]);
-            // printf("Longitude: %s\n", gps_data[5]);
-            // printf("E/W indicator: %s\n", gps_data[6]);
+            printf("UTC Time: %s\n", gps_data[1]);
+            printf("Status: %s\n", gps_data[2]);
+            printf("Latitude: %s\n", gps_data[3]);
+            printf("N/S indicator: %s\n", gps_data[4]);
+            printf("Longitude: %s\n", gps_data[5]);
+            printf("E/W indicator: %s\n", gps_data[6]);
             // printf("Speed over ground: %s\n", gps_data[7]);
             // printf("Course over ground: %s\n", gps_data[8]);
             // printf("Date: %c%c/%c%c/%c%c\n", gps_data[9][0], gps_data[9][1], gps_data[9][2], gps_data[9][3], gps_data[9][4],
-            //     gps_data[9][5]);
+                // gps_data[9][5]);
             // printf("Magnetic Variation: %s\n", gps_data[10]);
             // printf("E/W degree indicator: %s\n", gps_data[11]);
             // printf("Mode: %s\n", gps_data[12]);
@@ -113,6 +124,48 @@ namespace pa1010d
                 i++;
             }
         }
+    }
+
+    bool HasFix(i2c_inst_t *i2c)
+    {
+        printf("pa1010d::HasFix: gps_fix_count = %i, read_gps_flag = %i \n", gps_fix_count, read_gps_flag);
+        // printf("pa1010d::HasFix \n");
+        if(gps_fix_count < 20)  // if GPS does NOT have a fix
+        {
+            ++read_gps_flag;
+            if(read_gps_flag == 10)
+            {
+                read_gps_flag = 0;
+
+                // Clear array
+                memset(numcommand, 0, max_read);
+                // Read and re-format
+                pa1010d::read_raw(i2c, numcommand);
+                pa1010d::parse_GNMRC(numcommand, "GNRMC", latitude, longitude, utc_time);
+                
+                // printf("---NO fix\n");
+                // printf("UTC time: %s.\n", utc_time.c_str());
+                printf("pa1010d::HasFix: latitude: %s, longitude: %s.\n", latitude.c_str(), longitude.c_str());
+                // printf("---\n");
+
+                if(latitude != "none")
+                {
+                    printf("pa1010d::HasFix: LATITUDE != nonw \n");   
+                    ++gps_fix_count; 
+                }
+                else if(gps_fix_count > 0)
+                {
+                    --gps_fix_count;
+                }
+            }
+            return false;
+        }
+        else
+        {
+            printf("pa1010d::HasFix: TRUE \n");
+            return true;
+        }
+        
     }
 }
 

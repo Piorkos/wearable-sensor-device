@@ -6,7 +6,7 @@
 #define FLASH_TARGET_OFFSET (132 * 1024)
 const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
 int saved_pages_counter{0};
-// const int max_pages = 100;
+// const int max_pages = 10;
 const int max_pages = (PICO_FLASH_SIZE_BYTES - FLASH_TARGET_OFFSET)/FLASH_PAGE_SIZE;
 
 namespace storage
