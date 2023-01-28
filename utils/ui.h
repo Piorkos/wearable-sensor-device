@@ -12,6 +12,7 @@ namespace ui
     void InitButtons();
     void UpdateSide(pico_ssd1306::SSD1306* display, std::string side_text_0, std::string side_text_1);
     void GoToScreen(pico_ssd1306::SSD1306* display, StateId screen_id);
+    void UpdateTraining(pico_ssd1306::SSD1306* display);
     void UpdateButtons(bool top, bool bottom);
     int64_t EnableButtons(alarm_id_t id, void *user_data);
 
@@ -21,6 +22,11 @@ namespace ui
         bool bottom{};
     };
     
+    ButtonsState buttons_state{false, false};
+    // --- trainig-duration
+    uint8_t second_counter{0};
+    uint8_t seconds{0};
+    uint8_t minutes{0};
 
     void InitButtons()
     {
@@ -46,6 +52,8 @@ namespace ui
             break;
         case kStandby:
             UpdateButtons(false, true);
+            // gpio_set_irq_enabled_with_callback(config::kButton_top_pin, GPIO_IRQ_EDGE_FALL, true, ButtonCallback);
+            // gpio_set_irq_enabled_with_callback(config::kButton_bottom_pin, GPIO_IRQ_EDGE_FALL, true, ButtonCallback);
             display->clear();
             drawText(display, font_12x16, "START", 20, 20);
             drawText(display, font_12x16, "TRAINING?", 0, 40);
@@ -69,7 +77,12 @@ namespace ui
             display->sendBuffer();
             break;
         case kTraining:
-
+            UpdateButtons(false, true);
+            display->clear();
+            drawText(display, font_12x16, "DISTANCE:", 20, 10);
+            drawText(display, font_12x16, "TIME:", 18, 30);
+            UpdateSide(display, " ", "END");
+            display->sendBuffer();
             break;
         case kStopTraining:
 
@@ -77,6 +90,38 @@ namespace ui
         
         default:
             break;
+        }
+    }
+
+    void UpdateTraining(pico_ssd1306::SSD1306* display)
+    {
+        // printf("ui::UpdateTraining \n");
+
+        ++second_counter;
+
+        if(second_counter == 10)
+        {
+            second_counter = 0;
+            ++seconds;
+            if(seconds == 60)
+            {
+                seconds = 0;
+                ++minutes;
+            }
+            printf("time: min=%i, sec=%i \n", minutes, seconds);
+            std::string time{};
+            if(seconds < 10)
+            {
+                time = std::to_string(minutes) + ":0" + std::to_string(seconds);
+            }
+            else
+            {
+                time = std::to_string(minutes) + ":" + std::to_string(seconds);
+            }
+            display->clear();
+            drawText(display, font_12x16, time.c_str(), 18, 10);
+            UpdateSide(display, " ", "END");
+            display->sendBuffer();
         }
     }
 
@@ -96,13 +141,14 @@ namespace ui
         printf("ui::UpdateButtons: %b, %b \n", top, bottom);
         gpio_set_irq_enabled_with_callback(config::kButton_top_pin, GPIO_IRQ_EDGE_FALL, false, ButtonCallback);
         gpio_set_irq_enabled_with_callback(config::kButton_bottom_pin, GPIO_IRQ_EDGE_FALL, false, ButtonCallback);
-        ButtonsState buttons_state{top, bottom};
+        buttons_state.top = top;
+        buttons_state.bottom = bottom;
         add_alarm_in_ms(1000, EnableButtons, &buttons_state, false);
     }
 
     int64_t EnableButtons(alarm_id_t id, void *buttons_state)
     {
-        printf("ui::EnableButtons \n");
+        printf("ui::EnableButtons: %b, %b \n", static_cast<ButtonsState*>(buttons_state)->top, static_cast<ButtonsState*>(buttons_state)->bottom);
         gpio_set_irq_enabled_with_callback(config::kButton_top_pin, GPIO_IRQ_EDGE_FALL, static_cast<ButtonsState*>(buttons_state)->top, ButtonCallback);
         gpio_set_irq_enabled_with_callback(config::kButton_bottom_pin, GPIO_IRQ_EDGE_FALL, static_cast<ButtonsState*>(buttons_state)->bottom, ButtonCallback);
 

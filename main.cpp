@@ -15,7 +15,6 @@
 #include "storage.h"            // onboard Flesh memory
 #include "pa1010d.h"            // GPS
 #include "lsm6dsox/lsm6dsox.h"  // onboard's gyro, accel
-// #include "ui/ui.h"              // controls UI
 #include "utils/ui.h"           // controls UI
 #include "utils/data.h"         // pins, parameters,...
 
@@ -27,10 +26,8 @@
 
 // ---flags for reading data from sensors
 bool read_sensors_flag{false};
-// int read_gps_flag{0};
-// int gps_fix_count{0};
-bool btn1_pressed{false};
-bool btn2_pressed{false};
+bool btn1_pressed{false};   // top
+bool btn2_pressed{false};   // bottom
 
 
 
@@ -65,10 +62,10 @@ int main() {
     stdio_init_all();
 
     // ---wait for connection to CoolTerm on Mac
-    sleep_ms(5000);
+    sleep_ms(3000);
 
     #ifdef ARDUINO_NANO_RP2040
-        printf("- ARDUINO 1.0 \n");
+        printf("- ARDUINO 1.2 \n");
     #else
         printf("- Pi Pico \n");
     #endif
@@ -108,8 +105,6 @@ int main() {
     pico_ssd1306::SSD1306 display = pico_ssd1306::SSD1306(i2c0, config::kOledAddress, pico_ssd1306::Size::W128xH64);
     StateId current_state{StateId::kInit};
     ui::InitButtons();
-    // gpio_set_irq_enabled_with_callback(config::kButton_1_pin, GPIO_IRQ_EDGE_FALL, false, ButtonCallback);
-    // gpio_set_irq_enabled_with_callback(config::kButton_2_pin, GPIO_IRQ_EDGE_FALL, true, ButtonCallback);
 
     ui::GoToScreen(&display, current_state);
 
@@ -120,29 +115,29 @@ int main() {
     imu.Begin();
 
     // --- COMPASS LSM303D
-    int magX, magY, magZ;
+    int magX{}, magY{}, magZ{};
+    std::string compass_coordinates{};
     lsm303d::init(i2c0);
 
     // ---GPS PA1010D
+    printf("MAX READ = %i \n", max_read);
     // char numcommand[max_read];
-    // std::string latitude{"zero"};
-    // std::string longitude{"zero"};
-    // std::string utc_time{"zero"};
+    std::string latitude{"zero"};
+    std::string longitude{"zero"};
+    std::string utc_time{"zero"};
     char init_command[] = "$PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n";
     hw_write_masked(&i2c0->hw->sda_hold, 5, I2C_IC_SDA_HOLD_IC_SDA_TX_HOLD_BITS);
     // Make the I2C pins available to picotool
     bi_decl(bi_2pins_with_func(config::kI2C_0_sda_pin, config::kI2C_0_scl_pin, GPIO_FUNC_I2C));
     pa1010d::pa1010d_write_command(i2c0, init_command, strlen(init_command));
-    
-    sleep_ms(5000);
 
     // ---timer
     struct repeating_timer timer_1;
     add_repeating_timer_ms(100, timer_callback, NULL, &timer_1);
 
-    std::string data_to_store{"|"};
 
-    sleep_ms(10000);
+
+    std::string data_to_store{"|"};
 
 
 
@@ -180,21 +175,19 @@ int main() {
         {
         case StateId::kInit:
             // TODO read configuration data from FLASH memory
-            sleep_ms(5);
-            current_state = StateId::kStandby; 
-            ui::GoToScreen(&display, StateId::kStandby);
+            sleep_ms(3000);
+            // current_state = StateId::kStandby;
+            // ui::GoToScreen(&display, StateId::kStandby);
+
+            current_state = StateId::kTraining;
+            ui::GoToScreen(&display, StateId::kTraining);
             break;
         case StateId::kStandby:
             if(btn2_pressed)
             {
-                extern char __flash_binary_end;
-                uintptr_t end = (uintptr_t) &__flash_binary_end;
-                printf("while: Binary ends at %8x\n", end);
-                printf("while: Binary ends at %u\n", end);
-
                 current_state = StateId::kGpsSearch;
                 ui::GoToScreen(&display, StateId::kGpsSearch);
-                // turn on GPS, get connection
+                // TODO turn on GPS, get connection
                 btn2_pressed = false;
             }
             break;
@@ -203,13 +196,20 @@ int main() {
             {
                 current_state = StateId::kStandby;
                 ui::GoToScreen(&display, StateId::kStandby);
-                // turn off GPS
+                // TODO turn off GPS
                 btn2_pressed = false;
             }
-            if(pa1010d::HasFix(i2c0))
+            if(read_sensors_flag)
             {
-                current_state = StateId::kGpsReady;
-                ui::GoToScreen(&display, StateId::kGpsReady);
+                read_sensors_flag = false;
+                int has_fix{false};
+                has_fix = pa1010d::HasFix(i2c0, latitude, longitude, utc_time);
+                printf("UTC time: %s.\n", utc_time.c_str());
+                if(has_fix)
+                {
+                    current_state = StateId::kGpsReady;
+                    ui::GoToScreen(&display, StateId::kGpsReady);
+                }
             }
             break;
         case StateId::kGpsReady:
@@ -217,20 +217,42 @@ int main() {
             {
                 current_state = StateId::kTraining;
                 ui::GoToScreen(&display, StateId::kTraining);
-                // turn on SENSORS and set up storing in FLASH
+                // TODO turn on SENSORS and set up storing in FLASH
                 btn1_pressed = false;
             }
             if(btn2_pressed)
             {
                 current_state = StateId::kStandby;
                 ui::GoToScreen(&display, StateId::kStandby);
-                // turn off GPS
+                // TODO turn off GPS
                 btn2_pressed = false;
             }
             // if no action without 30s, turn off GPS and go to kStandby
             break;
         case StateId::kTraining:
-
+            // TODO capture data from sensors
+            // -- compass
+            lsm303d::read(i2c0, &magX, &magY, &magZ);
+            compass_coordinates = "x = " + std::to_string(magX) + ", y = " + std::to_string(magY) + ", z = " + std::to_string(magZ) + "\n";
+            printf(compass_coordinates.c_str());
+            // data_to_store += compass_coordinates;
+            // -- gyro, accel
+            // -- gps
+            // TODO write data to FLASH
+            // TODO calculate distance
+            if(read_sensors_flag)
+            {
+                read_sensors_flag = false;
+                ui::UpdateTraining(&display);
+            }
+            if(btn2_pressed)
+            {
+                current_state = StateId::kStopTraining;
+                ui::GoToScreen(&display, StateId::kStopTraining);
+                // TODO pause writing to FLASH
+                // TODO pause updating training
+                btn2_pressed = false;
+            }
             break;
         case StateId::kStopTraining:
 
@@ -244,39 +266,43 @@ int main() {
 
 
 // #ifndef READ_MEMORY
-//         if(read_sensors_flag)
-//         {
-//             read_sensors_flag = false;
+        // if(read_sensors_flag)
+        // {
+        //     read_sensors_flag = false;
             
-//             if(gps_fix_count < 20)
-//             // if(gps_fix_count < 20)  // if GPS does NOT have a fix
-//             {
-//                 ++read_gps_flag;
-//                 if(read_gps_flag == 10)
-//                 {
-//                     read_gps_flag = 0;
+        //     // if(gps_fix_count < 20)
+        //     // // if(gps_fix_count < 20)  // if GPS does NOT have a fix
+        //     // {
+        //     //     ++read_gps_flag;
+        //     //     if(read_gps_flag == 10)
+        //     //     {
+        //     //         read_gps_flag = 0;
 
-//                     // Clear array
-//                     memset(numcommand, 0, max_read);
-//                     // Read and re-format
-//                     pa1010d::read_raw(I2C_1, numcommand);
-//                     pa1010d::parse_GNMRC(numcommand, "GNRMC", latitude, longitude, utc_time);
+        //             // Clear array
+        //             // memset(numcommand, 0, max_read);
+        //             // Read and re-format
+        //             int has_fix{false};
+        //             has_fix = pa1010d::HasFix(i2c0, latitude, longitude, utc_time);
+        //             printf("HAS FIX = %b \n", has_fix);
+        //             // pa1010d::read_raw(i2c0, numcommand);
+        //             // pa1010d::parse_GNMRC(numcommand, "GNRMC", latitude, longitude, utc_time);
                     
-//                     // printf("---NO fix\n");
-//                     // printf("UTC time: %s.\n", utc_time.c_str());
-//                     // printf("latitude: %s, longitude: %s.\n", latitude.c_str(), longitude.c_str());
-//                     // printf("---\n");
+        //             printf("---NO fix\n");
+        //             printf("UTC time: %s.\n", utc_time.c_str());
+        //             printf("latitude: %s, longitude: %s.\n", latitude.c_str(), longitude.c_str());
+        //             printf("---\n");
 
-//                     if(latitude != "none")
-//                     {
-//                         ++gps_fix_count; 
-//                     }
-//                     else if(gps_fix_count > 0)
-//                     {
-//                         --gps_fix_count;
-//                     }
-//                 }
-//             }
+        //             // if(latitude != "none")
+        //             // {
+        //             //     ++gps_fix_count; 
+        //             // }
+        //             // else if(gps_fix_count > 0)
+        //             // {
+        //             //     --gps_fix_count;
+        //             // }
+        //     //     }
+        //     // }
+        // }
 //             else    // if GPS has a fix
 //             {
 //                 data_to_store += "|";
