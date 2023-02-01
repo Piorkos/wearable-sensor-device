@@ -22,10 +22,8 @@ example_auto_set_url(halikOS)
 
 add_subdirectory(pico-ssd1306)
 add_subdirectory(lsm6dsox)
-add_subdirectory(ui)
 target_link_libraries(halikOS
   pico_ssd1306
   lsm6dsox
-  ui
   hardware_spi
   hardware_i2c)

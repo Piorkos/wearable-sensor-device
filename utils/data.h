@@ -70,6 +70,11 @@ enum StateId
     kGpsReady,
     kTraining,
     kStopTraining,
+    kReadData,
+    kReadingInProgress,
+    kEraseData,
+    kErasingInProgress,
+    kReturn,
 };
 
 

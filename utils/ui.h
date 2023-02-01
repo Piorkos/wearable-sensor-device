@@ -51,13 +51,11 @@ namespace ui
             display->sendBuffer();
             break;
         case kStandby:
-            UpdateButtons(false, true);
-            // gpio_set_irq_enabled_with_callback(config::kButton_top_pin, GPIO_IRQ_EDGE_FALL, true, ButtonCallback);
-            // gpio_set_irq_enabled_with_callback(config::kButton_bottom_pin, GPIO_IRQ_EDGE_FALL, true, ButtonCallback);
+            UpdateButtons(true, true);
             display->clear();
             drawText(display, font_12x16, "START", 20, 20);
             drawText(display, font_12x16, "TRAINING?", 0, 40);
-            UpdateSide(display, " ", "YES");
+            UpdateSide(display, "OPT", "YES");
             display->sendBuffer();
             break;
         case kGpsSearch:
@@ -85,7 +83,50 @@ namespace ui
             display->sendBuffer();
             break;
         case kStopTraining:
-
+            UpdateButtons(true, true);
+            display->clear();
+            drawText(display, font_12x16, "END", 40, 10);
+            drawText(display, font_12x16, "TRAINING?", 18, 30);
+            UpdateSide(display, "YES", "NO");
+            display->sendBuffer();
+            break;
+        case kReadData:
+            UpdateButtons(true, true);
+            display->clear();
+            drawText(display, font_12x16, "READ", 26, 10);
+            drawText(display, font_12x16, "DATA?", 18, 30);
+            UpdateSide(display, "NO", "YES");
+            display->sendBuffer();
+            break;
+        case kReadingInProgress:
+            UpdateButtons(false, false);
+            display->clear();
+            drawText(display, font_12x16, "READING", 20, 10);
+            drawText(display, font_12x16, "...", 34, 30);
+            display->sendBuffer();
+            break;
+        case kEraseData:
+            UpdateButtons(true, true);
+            display->clear();
+            drawText(display, font_12x16, "ERASE", 20, 10);
+            drawText(display, font_12x16, "DATA?", 20, 30);
+            UpdateSide(display, "NO", "YES");
+            display->sendBuffer();
+            break;
+        case kErasingInProgress:
+            UpdateButtons(false, false);
+            display->clear();
+            drawText(display, font_12x16, "ERASING", 20, 10);
+            drawText(display, font_12x16, "...", 34, 30);
+            display->sendBuffer();
+            break;
+        case kReturn:
+            UpdateButtons(true, true);
+            display->clear();
+            drawText(display, font_12x16, "MAIN", 26, 10);
+            drawText(display, font_12x16, "MENU?", 18, 30);
+            UpdateSide(display, "NO", "YES");
+            display->sendBuffer();
             break;
         
         default:

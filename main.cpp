@@ -11,12 +11,13 @@
 
 #include "pico-ssd1306/ssd1306.h"
 #include "pico-ssd1306/textRenderer/TextRenderer.h"
-#include "lsm303d.h"            // compass
-#include "storage.h"            // onboard Flesh memory
-#include "pa1010d.h"            // GPS
+#include "drivers/lsm303d.h"            // compass
+#include "drivers/storage.h"            // onboard Flesh memory
+#include "drivers/pa1010d.h"            // GPS
 #include "lsm6dsox/lsm6dsox.h"  // onboard's gyro, accel
 #include "utils/ui.h"           // controls UI
 #include "utils/data.h"         // pins, parameters,...
+#include "utils/sensors_data.h" // Struct to hold data from sensors
 
 
 // *************************
@@ -109,22 +110,15 @@ int main() {
     ui::GoToScreen(&display, current_state);
 
     // ---IMU LSM6DSOX
-    float accelerometer[3];
-    float gyroscope[3];
     Imu imu{i2c0};
     imu.Begin();
 
     // --- COMPASS LSM303D
-    int magX{}, magY{}, magZ{};
     std::string compass_coordinates{};
     lsm303d::init(i2c0);
 
     // ---GPS PA1010D
     printf("MAX READ = %i \n", max_read);
-    // char numcommand[max_read];
-    std::string latitude{"zero"};
-    std::string longitude{"zero"};
-    std::string utc_time{"zero"};
     char init_command[] = "$PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n";
     hw_write_masked(&i2c0->hw->sda_hold, 5, I2C_IC_SDA_HOLD_IC_SDA_TX_HOLD_BITS);
     // Make the I2C pins available to picotool
@@ -136,7 +130,8 @@ int main() {
     add_repeating_timer_ms(100, timer_callback, NULL, &timer_1);
 
 
-
+    SensorsData sensors_data{};
+    
     std::string data_to_store{"|"};
 
 
@@ -155,7 +150,7 @@ int main() {
 
     for (size_t i = 0; i < saved_pages_counter; ++i)
     {
-        storage::read_data_from_flash(i);
+        storage::ReadDataFromFlash(i);
         // if(i % 300 == 0)
         // {
         //     sleep_ms(10000);
@@ -175,14 +170,18 @@ int main() {
         {
         case StateId::kInit:
             // TODO read configuration data from FLASH memory
+            storage::RestoreSavedPagesCounter();
             sleep_ms(3000);
-            // current_state = StateId::kStandby;
-            // ui::GoToScreen(&display, StateId::kStandby);
-
-            current_state = StateId::kTraining;
-            ui::GoToScreen(&display, StateId::kTraining);
+            current_state = StateId::kStandby;
+            ui::GoToScreen(&display, StateId::kStandby);
             break;
         case StateId::kStandby:
+            if(btn1_pressed)
+            {
+                current_state = StateId::kReadData;
+                ui::GoToScreen(&display, StateId::kReadData); 
+                btn1_pressed = false;
+            }
             if(btn2_pressed)
             {
                 current_state = StateId::kGpsSearch;
@@ -203,8 +202,7 @@ int main() {
             {
                 read_sensors_flag = false;
                 int has_fix{false};
-                has_fix = pa1010d::HasFix(i2c0, latitude, longitude, utc_time);
-                printf("UTC time: %s.\n", utc_time.c_str());
+                has_fix = pa1010d::HasFix(i2c0, sensors_data);
                 if(has_fix)
                 {
                     current_state = StateId::kGpsReady;
@@ -227,24 +225,30 @@ int main() {
                 // TODO turn off GPS
                 btn2_pressed = false;
             }
-            // if no action without 30s, turn off GPS and go to kStandby
+            // TODO if no action within 30s, turn off GPS and go to kStandby
             break;
         case StateId::kTraining:
-            // TODO capture data from sensors
-            // -- compass
-            lsm303d::read(i2c0, &magX, &magY, &magZ);
-            compass_coordinates = "x = " + std::to_string(magX) + ", y = " + std::to_string(magY) + ", z = " + std::to_string(magZ) + "\n";
-            printf(compass_coordinates.c_str());
-            // data_to_store += compass_coordinates;
-            // -- gyro, accel
-            // -- gps
-            // TODO write data to FLASH
-            // TODO calculate distance
             if(read_sensors_flag)
             {
                 read_sensors_flag = false;
+
+                // -- compass - LSM303D
+                lsm303d::read(i2c0, sensors_data);
+                // -- gyro, accel - LSM6DSOX
+                imu.ReadAccelerometer(sensors_data);
+                imu.ReadGyroscope(sensors_data);
+                // -- gps
+                bool gps_data = pa1010d::ReadData1Per10(i2c0, sensors_data);
+                
+
+                // TODO write data to FLASH
+                int success = storage::UpdateDataToStore(sensors_data, gps_data);
+
+                // TODO calculate distance
+
                 ui::UpdateTraining(&display);
             }
+            
             if(btn2_pressed)
             {
                 current_state = StateId::kStopTraining;
@@ -256,6 +260,68 @@ int main() {
             break;
         case StateId::kStopTraining:
 
+
+            
+            break;
+        case StateId::kReadData:
+            if(btn1_pressed)
+            {
+                current_state = StateId::kEraseData;
+                ui::GoToScreen(&display, StateId::kEraseData); 
+                btn1_pressed = false;
+            }
+            if(btn2_pressed)
+            {
+                current_state = StateId::kReadingInProgress;
+                ui::GoToScreen(&display, StateId::kReadingInProgress);
+                // TODO turn on GPS, get connection
+                btn2_pressed = false;
+            }
+            
+            break;
+        case StateId::kReadingInProgress:
+            // Starts reading data and sending via UART to PC
+            storage::ReadAllData();
+
+            current_state = StateId::kStandby;
+            ui::GoToScreen(&display, StateId::kStandby);
+            break;
+        case StateId::kEraseData:
+            if(btn1_pressed)
+            {
+                current_state = StateId::kReturn;
+                ui::GoToScreen(&display, StateId::kReturn); 
+                btn1_pressed = false;
+            }
+            if(btn2_pressed)
+            {
+                current_state = StateId::kErasingInProgress;
+                ui::GoToScreen(&display, StateId::kErasingInProgress);
+                // TODO turn on GPS, get connection
+                btn2_pressed = false;
+            }
+            break;
+        case StateId::kErasingInProgress:
+            // TODO Start erasing data - actually erases first sector (16*256 bytes) and set saved_pages_counter=0
+            storage::EraseData();
+
+            current_state = StateId::kStandby;
+            ui::GoToScreen(&display, StateId::kStandby);
+            break;
+        case StateId::kReturn:
+            if(btn1_pressed)
+            {
+                current_state = StateId::kReadData;
+                ui::GoToScreen(&display, StateId::kReadData); 
+                btn1_pressed = false;
+            }
+            if(btn2_pressed)
+            {
+                current_state = StateId::kStandby;
+                ui::GoToScreen(&display, StateId::kStandby);
+                // TODO turn on GPS, get connection
+                btn2_pressed = false;
+            }
             break;
         default:
             break;
@@ -355,7 +421,7 @@ int main() {
 //                     std::string string_to_store = data_to_store.substr(0, FLASH_PAGE_SIZE);
 //                     data_to_store.erase(0, FLASH_PAGE_SIZE);
 //                     printf("%s", string_to_store.c_str());
-//                     bool success = storage::save_string_in_flash(string_to_store);
+//                     bool success = storage::SaveStringInFlash(string_to_store);
 //                     if(!success)
 //                     {
 //                         printf("ERROR: flash memory full\n");
