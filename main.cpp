@@ -18,6 +18,7 @@
 #include "utils/ui.h"           // controls UI
 #include "utils/data.h"         // pins, parameters,...
 #include "utils/sensors_data.h" // Struct to hold data from sensors
+#include "utils/distance.h"
 
 
 // *************************
@@ -166,12 +167,26 @@ int main() {
 
     while(true)
     {
+        std::string lat{"2421.06N"};
+        std::string lng{"2042.35E"};
+        std::string lng1{"4124.2982N"};
+        std::string lng2{"00212.3740E"};
+        std::string lng3{"4124.2982S"};
+        std::string lng4{"00212.3740W"};
+        std::string lng5{"8024.9082N"};
+        std::string lng6{"03259.9999E"};
+        std::string lng7{"4124.9000S"};
+        std::string lng8{"00259.0010W"};
+
         switch (current_state)
         {
         case StateId::kInit:
             // TODO read configuration data from FLASH memory
             storage::RestoreSavedPagesCounter();
             sleep_ms(3000);
+
+            distance::TestSuiteCalculateDistance();
+
             current_state = StateId::kStandby;
             ui::GoToScreen(&display, StateId::kStandby);
             break;

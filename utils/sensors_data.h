@@ -10,9 +10,16 @@ struct SensorsData
     int mag_x{0};
     int mag_y{0};
     int mag_z{0};
-    std::string latitude{"zero"};
-    std::string longitude{"zero"};
-    std::string utc_time{"zero"};
+    std::string latitude{"zero"};       // in DMM
+    std::string longitude{"zero"};      // in DMM
+    std::string utc_time{"zero"};       // in DMM
+    std::string prev_latitude{"zero"};  // in DMM
+    std::string prev_longitude{"zero"}; // in DMM
+    std::string prev_utc_time{"zero"};  // in DMM
+
+    double delta_lat{};                 // in km
+    double delta_lng{};                 // in km
+    double distance{};                  // in km
 };
 
 
