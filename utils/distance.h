@@ -12,25 +12,38 @@ namespace distance
     double DMMtoDD(const std::string& dmm);
     void CalculateDistance(SensorsData& sensors_data);
 
+    /**
+     * @brief Calculates distance between two points described by latitude and longitude.
+     * It is using algorithm which does not require much computation and has big precision 
+     * for distances smaller than 100 miles (max. error 0.36%). For bigger distance
+     * the error grows, the bigger the distance the bigger the error.
+     * For distances greater than 500 miles is better to use different formula, e.g. 'heversine'
+     * 
+     * @param sensors_data Object which contains points between which distance should be calculated.
+     * Distance (result) will be writted in this object.
+     */
     void CalculateDistance(SensorsData& sensors_data)
     {
-        constexpr int meridian_length{20004};   // in km
-        constexpr int equator_length{40075};    // in km
-        double lat1{};
-        double lat2{};
-        double lng1{};
-        double lng2{};
-        double rad_lat{};                       // in radians
+        if(sensors_data.prev_latitude != "zero")
+        {
+            constexpr int meridian_length{20004};   // in km
+            constexpr int equator_length{40075};    // in km
+            double lat1{};
+            double lat2{};
+            double lng1{};
+            double lng2{};
+            double rad_lat{};                       // in radians
 
-        lat1 = DMMtoDD(sensors_data.prev_latitude);
-        lat2 = DMMtoDD(sensors_data.latitude);
-        lng1 = DMMtoDD(sensors_data.prev_longitude);
-        lng2 = DMMtoDD(sensors_data.longitude);
-        rad_lat = ((lat1 + lat2) / 2) * M_PI / 180;
-        sensors_data.delta_lat = meridian_length * (lat2 - lat1) / 180;
-        sensors_data.delta_lng = equator_length * (lng2 - lng1) / 360 * std::cos(rad_lat);
-        
-        sensors_data.distance = std::sqrt(sensors_data.delta_lat*sensors_data.delta_lat + sensors_data.delta_lng*sensors_data.delta_lng);
+            lat1 = DMMtoDD(sensors_data.prev_latitude);
+            lat2 = DMMtoDD(sensors_data.latitude);
+            lng1 = DMMtoDD(sensors_data.prev_longitude);
+            lng2 = DMMtoDD(sensors_data.longitude);
+            rad_lat = ((lat1 + lat2) / 2) * M_PI / 180;
+            sensors_data.delta_lat = meridian_length * (lat2 - lat1) / 180;
+            sensors_data.delta_lng = equator_length * (lng2 - lng1) / 360 * std::cos(rad_lat);
+            
+            sensors_data.distance = std::sqrt(sensors_data.delta_lat*sensors_data.delta_lat + sensors_data.delta_lng*sensors_data.delta_lng);
+        }
     }
 
     /**

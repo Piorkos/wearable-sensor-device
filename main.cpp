@@ -30,14 +30,15 @@
 bool read_sensors_flag{false};
 bool btn1_pressed{false};   // top
 bool btn2_pressed{false};   // bottom
-
+uint16_t no_activity_counter{0};
 
 
 // *************************
 bool timer_callback(struct repeating_timer *timer_1)
 {
     read_sensors_flag = true;
-    return true; 
+    // ++no_activity_counter;
+    return true;
 }
 
 void ButtonCallback(uint gpio, uint32_t events)
@@ -52,7 +53,7 @@ void ButtonCallback(uint gpio, uint32_t events)
         }
         if(gpio == config::kButton_bottom_pin)
         {
-            printf("ButtonCallback BTN 1 \n");
+            printf("ButtonCallback BTN 2 \n");
             btn2_pressed = true;
         }
     }
@@ -132,63 +133,23 @@ int main() {
 
 
     SensorsData sensors_data{};
+    float run_distance{0};       // distance for full trainig
     
     std::string data_to_store{"|"};
 
 
-
-#ifdef READ_MEMORY
-    printf("---Reading data: \n");
-
-    display.clear();
-    drawText(&display, font_8x8, "READING DATA", 0 ,0);
-    display.sendBuffer(); //Send buffer to device and show on screen
-    sleep_ms(10000);
-
-    saved_pages_counter = max_pages;
-    // saved_pages_counter = 6000;
-    printf("saved_pages_counter %u\n", saved_pages_counter);
-
-    for (size_t i = 0; i < saved_pages_counter; ++i)
-    {
-        storage::ReadDataFromFlash(i);
-        // if(i % 300 == 0)
-        // {
-        //     sleep_ms(10000);
-        // }
-        // if(i % 50 == 0)
-        // {
-        //     sleep_ms(500);
-        // }
-    }
-    printf("---Reading data finished\n");
-#endif
-
-
     while(true)
     {
-        std::string lat{"2421.06N"};
-        std::string lng{"2042.35E"};
-        std::string lng1{"4124.2982N"};
-        std::string lng2{"00212.3740E"};
-        std::string lng3{"4124.2982S"};
-        std::string lng4{"00212.3740W"};
-        std::string lng5{"8024.9082N"};
-        std::string lng6{"03259.9999E"};
-        std::string lng7{"4124.9000S"};
-        std::string lng8{"00259.0010W"};
-
+        // printf("while current state = %i \n", current_state);
         switch (current_state)
         {
         case StateId::kInit:
-            // TODO read configuration data from FLASH memory
             storage::RestoreSavedPagesCounter();
             sleep_ms(3000);
-
-            distance::TestSuiteCalculateDistance();
-
-            current_state = StateId::kStandby;
-            ui::GoToScreen(&display, StateId::kStandby);
+            // current_state = StateId::kStandby;
+            // ui::GoToScreen(&display, StateId::kStandby);
+            current_state = StateId::kTraining;
+            ui::GoToScreen(&display, StateId::kTraining);
             break;
         case StateId::kStandby:
             if(btn1_pressed)
@@ -217,9 +178,11 @@ int main() {
             {
                 read_sensors_flag = false;
                 int has_fix{false};
-                has_fix = pa1010d::HasFix(i2c0, sensors_data);
+                // has_fix = pa1010d::HasFix(i2c0, sensors_data);
+                has_fix = pa1010d::HasFixMock(i2c0, sensors_data);
                 if(has_fix)
                 {
+                    no_activity_counter = 0;
                     current_state = StateId::kGpsReady;
                     ui::GoToScreen(&display, StateId::kGpsReady);
                 }
@@ -228,6 +191,7 @@ int main() {
         case StateId::kGpsReady:
             if(btn1_pressed)
             {
+                storage::StartNewTraining();
                 current_state = StateId::kTraining;
                 ui::GoToScreen(&display, StateId::kTraining);
                 // TODO turn on SENSORS and set up storing in FLASH
@@ -240,11 +204,17 @@ int main() {
                 // TODO turn off GPS
                 btn2_pressed = false;
             }
-            // TODO if no action within 30s, turn off GPS and go to kStandby
+            if(no_activity_counter > 300)
+            {
+                current_state = StateId::kStandby;
+                ui::GoToScreen(&display, StateId::kStandby);
+            }
             break;
         case StateId::kTraining:
+            // printf("StateId::kTraining \n");
             if(read_sensors_flag)
             {
+                printf("StateId::kTraining read_sensors_flag \n");
                 read_sensors_flag = false;
 
                 // -- compass - LSM303D
@@ -252,31 +222,48 @@ int main() {
                 // -- gyro, accel - LSM6DSOX
                 imu.ReadAccelerometer(sensors_data);
                 imu.ReadGyroscope(sensors_data);
-                // -- gps
-                bool gps_data = pa1010d::ReadData1Per10(i2c0, sensors_data);
-                
-
-                // TODO write data to FLASH
+                // -- gps & disntace
+                // bool gps_data = pa1010d::ReadData1Per10(i2c0, sensors_data);
+                bool gps_data = pa1010d::ReadData1Per10Mock(i2c0, sensors_data);
+                if(gps_data)
+                {
+                    distance::CalculateDistance(sensors_data);
+                    run_distance += sensors_data.distance;
+                }
+                // ---write data to FLASH
                 int success = storage::UpdateDataToStore(sensors_data, gps_data);
+                printf("MAIN::training: UpdateDataToStore result = %i \n", success);
 
-                // TODO calculate distance
-
-                ui::UpdateTraining(&display);
+                ui::UpdateTraining(&display, run_distance);
             }
             
             if(btn2_pressed)
             {
+                no_activity_counter = 0;
                 current_state = StateId::kStopTraining;
                 ui::GoToScreen(&display, StateId::kStopTraining);
-                // TODO pause writing to FLASH
-                // TODO pause updating training
                 btn2_pressed = false;
             }
             break;
         case StateId::kStopTraining:
-
-
-            
+            if(btn1_pressed)
+            {
+                current_state = StateId::kTraining;
+                ui::GoToScreen(&display, StateId::kTraining);
+                btn1_pressed = false;
+            }
+            if(btn2_pressed)
+            {
+                current_state = StateId::kStandby;
+                ui::GoToScreen(&display, StateId::kStandby);
+                // TODO turn off GPS
+                btn2_pressed = false;
+            }
+            if(no_activity_counter > 300)
+            {
+                current_state = StateId::kTraining;
+                ui::GoToScreen(&display, StateId::kTraining);
+            }
             break;
         case StateId::kReadData:
             if(btn1_pressed)
@@ -289,7 +276,6 @@ int main() {
             {
                 current_state = StateId::kReadingInProgress;
                 ui::GoToScreen(&display, StateId::kReadingInProgress);
-                // TODO turn on GPS, get connection
                 btn2_pressed = false;
             }
             
@@ -297,6 +283,7 @@ int main() {
         case StateId::kReadingInProgress:
             // Starts reading data and sending via UART to PC
             storage::ReadAllData();
+            sleep_ms(3);
 
             current_state = StateId::kStandby;
             ui::GoToScreen(&display, StateId::kStandby);
@@ -312,13 +299,13 @@ int main() {
             {
                 current_state = StateId::kErasingInProgress;
                 ui::GoToScreen(&display, StateId::kErasingInProgress);
-                // TODO turn on GPS, get connection
                 btn2_pressed = false;
             }
             break;
         case StateId::kErasingInProgress:
-            // TODO Start erasing data - actually erases first sector (16*256 bytes) and set saved_pages_counter=0
+            // Start erasing data - actually erases first sector (16*256 bytes) and set saved_pages_counter=0
             storage::EraseData();
+            sleep_ms(3);
 
             current_state = StateId::kStandby;
             ui::GoToScreen(&display, StateId::kStandby);
@@ -334,7 +321,6 @@ int main() {
             {
                 current_state = StateId::kStandby;
                 ui::GoToScreen(&display, StateId::kStandby);
-                // TODO turn on GPS, get connection
                 btn2_pressed = false;
             }
             break;

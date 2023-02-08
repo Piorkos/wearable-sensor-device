@@ -5,29 +5,32 @@
 #include <string>
 
 #include "../utils/sensors_data.h"
+#include "../utils/distance.h"      // used only for tests-mock
 
 
 const int addr = 0x10;
 const int max_read = 250;
 
 
-
-
 namespace pa1010d
 {
+    int gps_fix_count{0};
+    int read_gps_flag{0};
+    char numcommand[max_read];
+    // 140814.000,4124.2987N,00212.3749E
+    double mock_latitude{1000.0000};
+    double mock_longitude{1000.0000};
+    std::string mock_time{"120000.000"};
+
+
     void pa1010d_write_command(i2c_inst_t *i2c, const char command[], int com_length);
     void parse_GNMRC(char output[], char protocol[], std::string& latitude, std::string& longitude, std::string& utc_time);
     void read_raw(i2c_inst_t *i2c, char numcommand[]);
     bool HasFix(i2c_inst_t *i2c, SensorsData& sensors_data);
+    bool HasFixMock(i2c_inst_t *i2c, SensorsData& sensors_data);
+    bool ReadData1Per10Mock(i2c_inst_t *i2c, SensorsData& sensors_data);
+    void MockLatLng(SensorsData& sensors_data);
 
-
-    int gps_fix_count{0};
-    int read_gps_flag{0};
-    char numcommand[max_read];
-    // std::string latitude{"zero"};
-    // std::string longitude{"zero"};
-    // std::string utc_time{"zero"};
-    // char init_command[] = "$PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n";
 
     void pa1010d_write_command(i2c_inst_t *i2c, const char command[], int com_length) 
     {
@@ -166,6 +169,8 @@ namespace pa1010d
             return false;
         }
 
+        gps_fix_count = 0;
+
         return true;
     }
 
@@ -197,6 +202,98 @@ namespace pa1010d
         }
         
         return false;
+    }
+
+    bool ReadData1Per10Mock(i2c_inst_t *i2c, SensorsData& sensors_data)
+    {
+        ++read_gps_flag;
+        if(read_gps_flag == 10)
+        {
+            printf("pa1010d::ReadData1Per10Mock - read_gps_flag = 10 \n");
+            read_gps_flag = 0;
+
+            sensors_data.prev_latitude = sensors_data.latitude;
+            sensors_data.prev_longitude = sensors_data.longitude;
+            sensors_data.prev_utc_time = sensors_data.utc_time;
+
+            MockLatLng(sensors_data);
+
+            return true;
+        }
+        
+        return false;
+    }
+
+    void MockLatLng(SensorsData& sensors_data)
+    {
+        // 140814.000,4124.2987N,00212.3749E
+        
+        if(storage::GetTrainingsCounter() == 0)
+        {
+            // lat 1000.0001->1000.1000; lng=1000.0001
+            if(mock_latitude < 1000.1001)    // distance 185,32 meters
+            {
+                mock_latitude += 0.001;    // distance ~0.1853 meter
+            }
+        }
+        else if(storage::GetTrainingsCounter() == 1)
+        {
+            // lat 1000.1000->1000.2000; lng 1000.0000->1000.1000
+            if(mock_longitude < 1000.1001)    // distance 260,1 meters
+            {
+                mock_latitude += 0.001;    // distance ~0.1853 meter
+                mock_longitude += 0.001;
+            }
+        }
+        else if(storage::GetTrainingsCounter() == 2)
+        {
+            // lat=1000.2000; lng 1000.1000->1000.2000
+            if(mock_longitude < 1000.2001)    // distance 182,5 meters
+            {
+                mock_longitude += 0.001;
+            }
+        }
+        else if(storage::GetTrainingsCounter() == 3)
+        {
+            // lat 1000.2->1001.0; lng 1000.2->1001.0
+            if(mock_longitude < 1001.0000)    // distance 2'081 meters
+            {
+                mock_latitude += 0.01;    // distance ~0.1853 meter
+                mock_longitude += 0.01;
+            }
+        }
+
+        sensors_data.latitude = std::to_string(mock_latitude);
+        sensors_data.longitude = std::to_string(mock_longitude);
+        sensors_data.utc_time = mock_time;
+    }
+
+    /**
+     * @brief Returns true after 5s
+     * 
+     * @param i2c 
+     * @param sensors_data 
+     * @return true 
+     * @return false 
+     */
+    bool HasFixMock(i2c_inst_t *i2c, SensorsData& sensors_data)
+    {
+        if(gps_fix_count < 5)  // if GPS does NOT have a fix
+        {
+            ++read_gps_flag;
+            if(read_gps_flag == 10)
+            {
+                printf("HasFixMock: gps_fix_count = %i \n", gps_fix_count);
+                read_gps_flag = 0;
+
+                ++gps_fix_count;
+            }
+            return false;
+        }
+
+        gps_fix_count = 0;
+
+        return true;
     }
 }
 

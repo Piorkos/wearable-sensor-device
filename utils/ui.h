@@ -9,13 +9,6 @@ void ButtonCallback(uint gpio, uint32_t events);
 
 namespace ui
 {
-    void InitButtons();
-    void UpdateSide(pico_ssd1306::SSD1306* display, std::string side_text_0, std::string side_text_1);
-    void GoToScreen(pico_ssd1306::SSD1306* display, StateId screen_id);
-    void UpdateTraining(pico_ssd1306::SSD1306* display);
-    void UpdateButtons(bool top, bool bottom);
-    int64_t EnableButtons(alarm_id_t id, void *user_data);
-
     struct ButtonsState
     {
         bool top{};
@@ -27,6 +20,16 @@ namespace ui
     uint8_t second_counter{0};
     uint8_t seconds{0};
     uint8_t minutes{0};
+    uint8_t hours{0};
+
+    
+    void InitButtons();
+    void UpdateSide(pico_ssd1306::SSD1306* display, std::string side_text_0, std::string side_text_1);
+    void GoToScreen(pico_ssd1306::SSD1306* display, StateId screen_id);
+    void UpdateTraining(pico_ssd1306::SSD1306* display);
+    void UpdateButtons(bool top, bool bottom);
+    int64_t EnableButtons(alarm_id_t id, void *user_data);
+
 
     void InitButtons()
     {
@@ -87,7 +90,7 @@ namespace ui
             display->clear();
             drawText(display, font_12x16, "END", 40, 10);
             drawText(display, font_12x16, "TRAINING?", 18, 30);
-            UpdateSide(display, "YES", "NO");
+            UpdateSide(display, "NO", "YES");
             display->sendBuffer();
             break;
         case kReadData:
@@ -134,11 +137,21 @@ namespace ui
         }
     }
 
-    void UpdateTraining(pico_ssd1306::SSD1306* display)
+
+    /**
+     * @brief Update time and distance displayed on the display.
+     * 
+     * @param display handler to display
+     * @param distance new value of distance
+     */
+    void UpdateTraining(pico_ssd1306::SSD1306* display, float distance)
     {
-        // printf("ui::UpdateTraining \n");
+        printf("ui::UpdateTraining \n");
+
+        // TODO display distance
 
         ++second_counter;
+        std::string time{};
 
         if(second_counter == 10)
         {
@@ -149,21 +162,44 @@ namespace ui
                 seconds = 0;
                 ++minutes;
             }
-            printf("time: min=%i, sec=%i \n", minutes, seconds);
-            std::string time{};
-            if(seconds < 10)
+            if(minutes == 60)
             {
-                time = std::to_string(minutes) + ":0" + std::to_string(seconds);
+                minutes = 0;
+                ++hours;
+            }
+            printf("time: min=%i, sec=%i \n", minutes, seconds);
+            
+            if(hours < 1)
+            {
+                if(seconds < 10)
+                {
+                    time = std::to_string(minutes) + ":0" + std::to_string(seconds);
+                }
+                else
+                {
+                    time = std::to_string(minutes) + ":" + std::to_string(seconds);
+                }
             }
             else
             {
-                time = std::to_string(minutes) + ":" + std::to_string(seconds);
+                if(minutes < 10)
+                {
+                    time = std::to_string(hours) + ":0" + std::to_string(minutes);
+                }
+                else
+                {
+                    time = std::to_string(hours) + ":" + std::to_string(minutes);
+                }
+
             }
-            display->clear();
-            drawText(display, font_12x16, time.c_str(), 18, 10);
-            UpdateSide(display, " ", "END");
-            display->sendBuffer();
+            
         }
+        std::string distance_s{std::to_string(distance) + " km"};
+        display->clear();
+        drawText(display, font_12x16, time.c_str(), 18, 10);
+        drawText(display, font_12x16, distance_s.c_str(), 18, 30);
+        UpdateSide(display, " ", "END");
+        display->sendBuffer();
     }
 
     void UpdateSide(pico_ssd1306::SSD1306* display, std::string side_text_0, std::string side_text_1)

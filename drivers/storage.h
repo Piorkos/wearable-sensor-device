@@ -11,12 +11,32 @@
 #define FLASH_TARGET_OFFSET (132 * 1024)
 const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
 static int saved_pages_counter{0};
+static int trainings_counter{0};
 // const int max_pages = 10;
 const int max_pages = (PICO_FLASH_SIZE_BYTES - FLASH_TARGET_OFFSET)/FLASH_PAGE_SIZE;
 static std::string data_to_store{};
 
+/**
+ * @brief Stored data structure
+ * "$" - sign for new training
+ * "|" - sign for new set of data
+ * ";" - separator between data fields
+ * 
+ */
 namespace storage
 {
+    void StartNewTraining()
+    {
+        ++trainings_counter;
+        data_to_store += "$" + trainings_counter;
+        // TODO saved trainings_counter in FLASH memory
+    }
+
+    int GetTrainingsCounter()
+    {
+        return trainings_counter;
+    }
+
     /**
      * @brief Iterate through all pages in memory, untill it finds empty page. It updates the saved_pages_counter.
      * 
@@ -25,6 +45,9 @@ namespace storage
     int RestoreSavedPagesCounter()
     {
         printf("storage::RestoreSavedPagesCounter saved_pages_counter = %i \n", saved_pages_counter);
+
+        // TODO restore trainings_counter from the memory
+
         for (int i = 0; i < max_pages; ++i) 
         {
             if(flash_target_contents[(i*FLASH_PAGE_SIZE)] == 0xFF)
@@ -96,33 +119,47 @@ namespace storage
         }
     }
 
+    /**
+     * @brief Converts sensors data into string. Is the string's size is bigger than FLASH_PAGE_SIZE, then it will be written to the FLASH memory.
+     * Otherwise the string will cached and waiting for next data, untill it's size will be bigger than FLASH_PAGE_SIZE.
+     * 
+     * @param sensors_data Data from sensors, which should be saved in memory.
+     * @param include_gps Flag indicating if data should contain GPS as well.
+     * @return int 1 - data converted and written to FLASH memory, 2 - data converted and cached, but not written to FLASH memory yet, -1 - FLASH memory full, data not saved
+     */
     int UpdateDataToStore(SensorsData& sensors_data, bool include_gps)
     {
+        data_to_store += "|";
         if(include_gps)
         {
             data_to_store += sensors_data.utc_time;
-            data_to_store += ",";
+            data_to_store += ";";
             data_to_store += sensors_data.latitude;
-            data_to_store += ",";
+            data_to_store += ";";
             data_to_store += sensors_data.longitude;
-            data_to_store += ",";
+            data_to_store += ";";
+
+            // only for tests
+            data_to_store += std::to_string(sensors_data.delta_lat) + ";";
+            data_to_store += std::to_string(sensors_data.delta_lng) + ";";
+            data_to_store += std::to_string(sensors_data.distance) + ";";
         }
 
-        std::string compass_coordinates = std::to_string(sensors_data.mag_x) + "," + std::to_string(sensors_data.mag_y) + "," + std::to_string(sensors_data.mag_z);
+        std::string compass_coordinates = std::to_string(sensors_data.mag_x) + ";" + std::to_string(sensors_data.mag_y) + ";" + std::to_string(sensors_data.mag_z);
         data_to_store += compass_coordinates;
-        data_to_store += ",";
+        data_to_store += ";";
 
-        std::string accel_str = std::to_string(sensors_data.accelerometer[0]) + "," + std::to_string(sensors_data.accelerometer[1]) + "," + std::to_string(sensors_data.accelerometer[2]);
-        std::string gyr_str = std::to_string(sensors_data.gyroscope[0]) + "," + std::to_string(sensors_data.gyroscope[1]) + "," + std::to_string(sensors_data.gyroscope[2]);
+        std::string accel_str = std::to_string(sensors_data.accelerometer[0]) + ";" + std::to_string(sensors_data.accelerometer[1]) + ";" + std::to_string(sensors_data.accelerometer[2]);
+        std::string gyr_str = std::to_string(sensors_data.gyroscope[0]) + ";" + std::to_string(sensors_data.gyroscope[1]) + ";" + std::to_string(sensors_data.gyroscope[2]);
         data_to_store += accel_str;
-        data_to_store += ",";
+        data_to_store += ";";
         data_to_store += gyr_str;
 
         if(data_to_store.length() > FLASH_PAGE_SIZE)
         {
             std::string string_to_store = data_to_store.substr(0, FLASH_PAGE_SIZE);
             data_to_store.erase(0, FLASH_PAGE_SIZE);
-            printf("%s", string_to_store.c_str());
+            printf("%s \n", string_to_store.c_str());
             bool success = storage::SaveStringInFlash(string_to_store);
             if(!success)
             {
@@ -133,7 +170,7 @@ namespace storage
             return 1;
         }
 
-        return -2;
+        return 2;
     }
 
     /**
