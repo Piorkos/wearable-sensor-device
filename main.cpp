@@ -102,10 +102,15 @@ int main() {
     gpio_set_function(config::kI2C_0_scl_pin, GPIO_FUNC_I2C);
     gpio_pull_up(config::kI2C_0_sda_pin);
     gpio_pull_up(config::kI2C_0_scl_pin);
+    i2c_init(i2c1, 400 * 1000);
+    gpio_set_function(config::kI2C_1_sda_pin, GPIO_FUNC_I2C);
+    gpio_set_function(config::kI2C_1_scl_pin, GPIO_FUNC_I2C);
+    gpio_pull_up(config::kI2C_1_sda_pin);
+    gpio_pull_up(config::kI2C_1_scl_pin);
     printf("I2C initialized \n");
 
     // ---UI
-    pico_ssd1306::SSD1306 display = pico_ssd1306::SSD1306(i2c0, config::kOledAddress, pico_ssd1306::Size::W128xH64);
+    pico_ssd1306::SSD1306 display = pico_ssd1306::SSD1306(i2c1, config::kOledAddress, pico_ssd1306::Size::W128xH64);
     StateId current_state{StateId::kInit};
     ui::InitButtons();
 
@@ -117,15 +122,15 @@ int main() {
 
     // --- COMPASS LSM303D
     std::string compass_coordinates{};
-    lsm303d::init(i2c0);
+    lsm303d::init(i2c1);
 
     // ---GPS PA1010D
     printf("MAX READ = %i \n", max_read);
     char init_command[] = "$PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n";
-    hw_write_masked(&i2c0->hw->sda_hold, 5, I2C_IC_SDA_HOLD_IC_SDA_TX_HOLD_BITS);
+    hw_write_masked(&i2c1->hw->sda_hold, 5, I2C_IC_SDA_HOLD_IC_SDA_TX_HOLD_BITS);
     // Make the I2C pins available to picotool
     bi_decl(bi_2pins_with_func(config::kI2C_0_sda_pin, config::kI2C_0_scl_pin, GPIO_FUNC_I2C));
-    pa1010d::pa1010d_write_command(i2c0, init_command, strlen(init_command));
+    pa1010d::pa1010d_write_command(i2c1, init_command, strlen(init_command));
 
     // ---timer
     struct repeating_timer timer_1;
@@ -146,10 +151,10 @@ int main() {
         case StateId::kInit:
             storage::RestoreSavedPagesCounter();
             sleep_ms(3000);
-            // current_state = StateId::kStandby;
-            // ui::GoToScreen(&display, StateId::kStandby);
-            current_state = StateId::kTraining;
-            ui::GoToScreen(&display, StateId::kTraining);
+            current_state = StateId::kStandby;
+            ui::GoToScreen(&display, StateId::kStandby);
+            // current_state = StateId::kTraining;
+            // ui::GoToScreen(&display, StateId::kTraining);
             break;
         case StateId::kStandby:
             if(btn1_pressed)
@@ -178,8 +183,8 @@ int main() {
             {
                 read_sensors_flag = false;
                 int has_fix{false};
-                // has_fix = pa1010d::HasFix(i2c0, sensors_data);
-                has_fix = pa1010d::HasFixMock(i2c0, sensors_data);
+                // has_fix = pa1010d::HasFix(i2c1, sensors_data);
+                has_fix = pa1010d::HasFixMock(i2c1, sensors_data);
                 if(has_fix)
                 {
                     no_activity_counter = 0;
@@ -218,18 +223,19 @@ int main() {
                 read_sensors_flag = false;
 
                 // -- compass - LSM303D
-                lsm303d::read(i2c0, sensors_data);
+                lsm303d::read(i2c1, sensors_data);
                 // -- gyro, accel - LSM6DSOX
                 imu.ReadAccelerometer(sensors_data);
                 imu.ReadGyroscope(sensors_data);
-                // -- gps & disntace
-                // bool gps_data = pa1010d::ReadData1Per10(i2c0, sensors_data);
-                bool gps_data = pa1010d::ReadData1Per10Mock(i2c0, sensors_data);
-                if(gps_data)
-                {
-                    distance::CalculateDistance(sensors_data);
-                    run_distance += sensors_data.distance;
-                }
+                bool gps_data{false};
+                // // -- gps & disntace
+                // bool gps_data = pa1010d::ReadData1Per10(i2c1, sensors_data);
+                // // bool gps_data = pa1010d::ReadData1Per10Mock(i2c1, sensors_data);
+                // if(gps_data)
+                // {
+                //     distance::CalculateDistance(sensors_data);
+                //     run_distance += sensors_data.distance;
+                // }
                 // ---write data to FLASH
                 int success = storage::UpdateDataToStore(sensors_data, gps_data);
                 printf("MAIN::training: UpdateDataToStore result = %i \n", success);

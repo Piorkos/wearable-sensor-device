@@ -16,13 +16,17 @@ namespace config
     // ---I2C
     inline constexpr uint kI2C_0_sda_pin{12};
     inline constexpr uint kI2C_0_scl_pin{13};
+    // inline constexpr uint kI2C_0_sda_pin{0};
+    // inline constexpr uint kI2C_0_scl_pin{1};
+    inline constexpr uint kI2C_1_sda_pin{18};
+    inline constexpr uint kI2C_1_scl_pin{19};   
     // ---SPI - Confirm pins!!!
     inline constexpr uint kSPI_sck_pin{18};          // SCLK / SCK
     inline constexpr uint kSPI_mosi_pin{19};         // MOSI / COPI
     inline constexpr uint kSPI_cs_pin{17};            // SS / CS
     // ---BUTTONS
-    inline constexpr uint kButton_top_pin{25};        // right top
-    inline constexpr uint kButton_bottom_pin{15};        // right bottom
+    inline constexpr uint kButton_top_pin{21};        // right top
+    inline constexpr uint kButton_bottom_pin{5};        // right bottom
 }
 #else
 namespace config
