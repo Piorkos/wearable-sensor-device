@@ -46,12 +46,12 @@ void ButtonCallback(uint gpio, uint32_t events)
     printf("ButtonCallback \n");
     if(events == GPIO_IRQ_EDGE_FALL)
     {
-        if(gpio == config::kButton_top_pin)
+        if(gpio == config::kButton_left_pin)
         {
             printf("ButtonCallback BTN 1 \n");
             btn1_pressed = true;
         }
-        if(gpio == config::kButton_bottom_pin)
+        if(gpio == config::kButton_right_pin)
         {
             printf("ButtonCallback BTN 2 \n");
             btn2_pressed = true;
@@ -138,7 +138,6 @@ int main() {
 
 
     SensorsData sensors_data{};
-    float run_distance{0};       // distance for full trainig
     
     std::string data_to_store{"|"};
 
@@ -153,8 +152,6 @@ int main() {
             sleep_ms(3000);
             current_state = StateId::kStandby;
             ui::GoToScreen(&display, StateId::kStandby);
-            // current_state = StateId::kTraining;
-            // ui::GoToScreen(&display, StateId::kTraining);
             break;
         case StateId::kStandby:
             if(btn1_pressed)
@@ -183,8 +180,7 @@ int main() {
             {
                 read_sensors_flag = false;
                 int has_fix{false};
-                // has_fix = pa1010d::HasFix(i2c1, sensors_data);
-                has_fix = pa1010d::HasFixMock(i2c1, sensors_data);
+                has_fix = pa1010d::HasFix(i2c1, sensors_data);
                 if(has_fix)
                 {
                     no_activity_counter = 0;
@@ -196,18 +192,18 @@ int main() {
         case StateId::kGpsReady:
             if(btn1_pressed)
             {
+                current_state = StateId::kStandby;
+                ui::GoToScreen(&display, StateId::kStandby);
+                // TODO turn off GPS
+                btn2_pressed = false;
+            }
+            if(btn2_pressed)
+            {
                 storage::StartNewTraining();
                 current_state = StateId::kTraining;
                 ui::GoToScreen(&display, StateId::kTraining);
                 // TODO turn on SENSORS and set up storing in FLASH
                 btn1_pressed = false;
-            }
-            if(btn2_pressed)
-            {
-                current_state = StateId::kStandby;
-                ui::GoToScreen(&display, StateId::kStandby);
-                // TODO turn off GPS
-                btn2_pressed = false;
             }
             if(no_activity_counter > 300)
             {
@@ -227,20 +223,17 @@ int main() {
                 // -- gyro, accel - LSM6DSOX
                 imu.ReadAccelerometer(sensors_data);
                 imu.ReadGyroscope(sensors_data);
-                bool gps_data{false};
-                // // -- gps & disntace
-                // bool gps_data = pa1010d::ReadData1Per10(i2c1, sensors_data);
-                // // bool gps_data = pa1010d::ReadData1Per10Mock(i2c1, sensors_data);
-                // if(gps_data)
-                // {
-                //     distance::CalculateDistance(sensors_data);
-                //     run_distance += sensors_data.distance;
-                // }
+                // -- gps & disntace
+                bool gps_data = pa1010d::ReadData1Per10(i2c1, sensors_data);
+                if(gps_data)
+                {
+                    distance::CalculateDistance(sensors_data);
+                }
                 // ---write data to FLASH
                 int success = storage::UpdateDataToStore(sensors_data, gps_data);
                 printf("MAIN::training: UpdateDataToStore result = %i \n", success);
 
-                ui::UpdateTraining(&display, run_distance);
+                ui::UpdateTraining(&display, sensors_data.distance);
             }
             
             if(btn2_pressed)
@@ -309,7 +302,7 @@ int main() {
             }
             break;
         case StateId::kErasingInProgress:
-            // Start erasing data - actually erases first sector (16*256 bytes) and set saved_pages_counter=0
+            // Starts erasing data - actually erases first sector (16*256 bytes) and set saved_pages_counter=0
             storage::EraseData();
             sleep_ms(3);
 

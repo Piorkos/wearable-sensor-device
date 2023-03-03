@@ -108,8 +108,8 @@ namespace pa1010d
             }
             else
             {
-                latitude = "none";
-                longitude = "none";
+                latitude = "zero";
+                longitude = "zero";
             }
         }
     }
@@ -157,7 +157,7 @@ namespace pa1010d
                 pa1010d::read_raw(i2c, numcommand);
                 pa1010d::parse_GNMRC(numcommand, "GNRMC", sensors_data.latitude, sensors_data.longitude, sensors_data.utc_time);
 
-                if(sensors_data.latitude != "none")
+                if(sensors_data.latitude != "zero")
                 {
                     ++gps_fix_count; 
                 }
@@ -190,10 +190,6 @@ namespace pa1010d
             printf("pa1010d::ReadData1Per10 - read_gps_flag = 10 \n");
             read_gps_flag = 0;
 
-            sensors_data.prev_latitude = sensors_data.latitude;
-            sensors_data.prev_longitude = sensors_data.longitude;
-            sensors_data.prev_utc_time = sensors_data.utc_time;
-
             memset(numcommand, 0, max_read);
             pa1010d::read_raw(i2c, numcommand);
             pa1010d::parse_GNMRC(numcommand, "GNRMC", sensors_data.latitude, sensors_data.longitude, sensors_data.utc_time);
@@ -211,10 +207,6 @@ namespace pa1010d
         {
             printf("pa1010d::ReadData1Per10Mock - read_gps_flag = 10 \n");
             read_gps_flag = 0;
-
-            sensors_data.prev_latitude = sensors_data.latitude;
-            sensors_data.prev_longitude = sensors_data.longitude;
-            sensors_data.prev_utc_time = sensors_data.utc_time;
 
             MockLatLng(sensors_data);
 

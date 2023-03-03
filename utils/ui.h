@@ -11,8 +11,8 @@ namespace ui
 {
     struct ButtonsState
     {
-        bool top{};
-        bool bottom{};
+        bool left{};
+        bool right{};
     };
     
     ButtonsState buttons_state{false, false};
@@ -21,25 +21,27 @@ namespace ui
     uint8_t seconds{0};
     uint8_t minutes{0};
     uint8_t hours{0};
+    float run_distance{0};       // distance for full trainig
 
     
     void InitButtons();
     void UpdateSide(pico_ssd1306::SSD1306* display, std::string side_text_0, std::string side_text_1);
     void GoToScreen(pico_ssd1306::SSD1306* display, StateId screen_id);
     void UpdateTraining(pico_ssd1306::SSD1306* display);
-    void UpdateButtons(bool top, bool bottom);
+    void UpdateButtons(bool left, bool right);
     int64_t EnableButtons(alarm_id_t id, void *user_data);
+    void ResetTraining();
 
 
     void InitButtons()
     {
         printf("UI::InitButtons \n");
-        gpio_init(config::kButton_top_pin);
-        gpio_set_dir(config::kButton_top_pin, GPIO_IN);
-        gpio_pull_up(config::kButton_top_pin);
-        gpio_init(config::kButton_bottom_pin);
-        gpio_set_dir(config::kButton_bottom_pin, GPIO_IN);
-        gpio_pull_up(config::kButton_bottom_pin);
+        gpio_init(config::kButton_left_pin);
+        gpio_set_dir(config::kButton_left_pin, GPIO_IN);
+        gpio_pull_up(config::kButton_left_pin);
+        gpio_init(config::kButton_right_pin);
+        gpio_set_dir(config::kButton_right_pin, GPIO_IN);
+        gpio_pull_up(config::kButton_right_pin);
     }
 
     void GoToScreen(pico_ssd1306::SSD1306* display, StateId screen_id)
@@ -54,80 +56,81 @@ namespace ui
             display->sendBuffer();
             break;
         case kStandby:
+            ResetTraining();
             UpdateButtons(true, true);
             display->clear();
-            drawText(display, font_12x16, "START", 20, 20);
-            drawText(display, font_12x16, "TRAINING?", 0, 40);
-            UpdateSide(display, "OPT", "YES");
+            drawText(display, font_12x16, "START", 20, 0);
+            drawText(display, font_12x16, "TRAINING?", 0, 20);
+            UpdateSide(display, "OPTIONS", "YES");
             display->sendBuffer();
             break;
         case kGpsSearch:
             UpdateButtons(false, true);
             display->clear();
-            drawText(display, font_12x16, "GPS:", 20, 10);
-            drawText(display, font_12x16, "SEARCHING", 8, 30);
-            UpdateSide(display, " ", "CNL");
+            drawText(display, font_12x16, "GPS:", 20, 0);
+            drawText(display, font_12x16, "SEARCHING", 8, 20);
+            UpdateSide(display, " ", "CANCEL");
             display->sendBuffer();
             break;
         case kGpsReady:
             UpdateButtons(true, true);
             display->clear();
-            drawText(display, font_12x16, "GPS:", 20, 10);
-            drawText(display, font_12x16, "READY", 18, 30);
-            UpdateSide(display, "GO", "CNL");
+            drawText(display, font_12x16, "GPS:", 20, 0);
+            drawText(display, font_12x16, "READY", 18, 20);
+            UpdateSide(display, "CANCEL", "START");
             display->sendBuffer();
             break;
         case kTraining:
             UpdateButtons(false, true);
             display->clear();
-            drawText(display, font_12x16, "DISTANCE:", 20, 10);
-            drawText(display, font_12x16, "TIME:", 18, 30);
+            drawText(display, font_12x16, "DISTANCE:", 20, 0);
+            drawText(display, font_12x16, "TIME:", 18, 20);
             UpdateSide(display, " ", "END");
             display->sendBuffer();
             break;
         case kStopTraining:
             UpdateButtons(true, true);
             display->clear();
-            drawText(display, font_12x16, "END", 40, 10);
-            drawText(display, font_12x16, "TRAINING?", 18, 30);
+            drawText(display, font_12x16, "END", 40, 0);
+            drawText(display, font_12x16, "TRAINING?", 18, 20);
             UpdateSide(display, "NO", "YES");
             display->sendBuffer();
             break;
         case kReadData:
             UpdateButtons(true, true);
             display->clear();
-            drawText(display, font_12x16, "READ", 26, 10);
-            drawText(display, font_12x16, "DATA?", 18, 30);
+            drawText(display, font_12x16, "READ", 26, 0);
+            drawText(display, font_12x16, "DATA?", 18, 20);
             UpdateSide(display, "NO", "YES");
             display->sendBuffer();
             break;
         case kReadingInProgress:
             UpdateButtons(false, false);
             display->clear();
-            drawText(display, font_12x16, "READING", 20, 10);
-            drawText(display, font_12x16, "...", 34, 30);
+            drawText(display, font_12x16, "READING", 20, 0);
+            drawText(display, font_12x16, "...", 34, 20);
             display->sendBuffer();
             break;
         case kEraseData:
             UpdateButtons(true, true);
             display->clear();
-            drawText(display, font_12x16, "ERASE", 20, 10);
-            drawText(display, font_12x16, "DATA?", 20, 30);
+            drawText(display, font_12x16, "ERASE", 20, 0);
+            drawText(display, font_12x16, "DATA?", 20, 20);
             UpdateSide(display, "NO", "YES");
             display->sendBuffer();
             break;
         case kErasingInProgress:
             UpdateButtons(false, false);
             display->clear();
-            drawText(display, font_12x16, "ERASING", 20, 10);
-            drawText(display, font_12x16, "...", 34, 30);
+            drawText(display, font_12x16, "ERASING", 20, 0);
+            drawText(display, font_12x16, "...", 34, 20);
             display->sendBuffer();
             break;
         case kReturn:
             UpdateButtons(true, true);
             display->clear();
-            drawText(display, font_12x16, "MAIN", 26, 10);
-            drawText(display, font_12x16, "MENU?", 18, 30);
+            drawText(display, font_12x16, "MAIN", 26, 0);
+            drawText(display, font_12x16, "MENU?", 18, 20);
             UpdateSide(display, "NO", "YES");
             display->sendBuffer();
             break;
@@ -167,37 +170,39 @@ namespace ui
                 minutes = 0;
                 ++hours;
             }
-            printf("time: min=%i, sec=%i \n", minutes, seconds);
-            
-            if(hours < 1)
+            printf("time: min=%i, sec=%i \n", minutes, seconds);        
+        }
+
+        if(hours < 1)
+        {
+            if(seconds < 10)
             {
-                if(seconds < 10)
-                {
-                    time = std::to_string(minutes) + ":0" + std::to_string(seconds);
-                }
-                else
-                {
-                    time = std::to_string(minutes) + ":" + std::to_string(seconds);
-                }
+                time = std::to_string(minutes) + ":0" + std::to_string(seconds);
             }
             else
             {
-                if(minutes < 10)
-                {
-                    time = std::to_string(hours) + ":0" + std::to_string(minutes);
-                }
-                else
-                {
-                    time = std::to_string(hours) + ":" + std::to_string(minutes);
-                }
-
+                time = std::to_string(minutes) + ":" + std::to_string(seconds);
             }
-            
         }
-        std::string distance_s{std::to_string(distance) + " km"};
+        else
+        {
+            if(minutes < 10)
+            {
+                time = std::to_string(hours) + ":0" + std::to_string(minutes);
+            }
+            else
+            {
+                time = std::to_string(hours) + ":" + std::to_string(minutes);
+            }
+
+        }
+
+        run_distance += distance;
+
+        std::string distance_s{std::to_string(run_distance) + " km"};
         display->clear();
-        drawText(display, font_12x16, time.c_str(), 18, 10);
-        drawText(display, font_12x16, distance_s.c_str(), 18, 30);
+        drawText(display, font_12x16, time.c_str(), 18, 0);
+        drawText(display, font_8x8, distance_s.c_str(), 0, 20);
         UpdateSide(display, " ", "END");
         display->sendBuffer();
     }
@@ -205,31 +210,42 @@ namespace ui
     void UpdateSide(pico_ssd1306::SSD1306* display, std::string side_text_0, std::string side_text_1)
     {
         printf("ui:UpdateSide: %s, %s \n", side_text_0.c_str(), side_text_1.c_str());
-        drawText(display, font_8x8, &(side_text_0[0]), (config::kWidth - config::kSideFontSize), 0);
-        drawText(display, font_8x8, &(side_text_0[1]), (config::kWidth - config::kSideFontSize), 9);
-        drawText(display, font_8x8, &(side_text_0[2]), (config::kWidth - config::kSideFontSize), 18);
-        drawText(display, font_8x8, &(side_text_1[0]), (config::kWidth - config::kSideFontSize), config::kHeight - 3*(config::kSideFontSize + 1));
-        drawText(display, font_8x8, &(side_text_1[1]), (config::kWidth - config::kSideFontSize), config::kHeight - 2*(config::kSideFontSize + 1));
-        drawText(display, font_8x8, &(side_text_1[2]), (config::kWidth - config::kSideFontSize), config::kHeight - config::kSideFontSize);
+        drawText(display, font_8x8, side_text_0.c_str(), 0, config::kHeight - config::kSideFontSize);
+        drawText(display, font_8x8, side_text_1.c_str(), config::kWidth - (config::kWidth/2), config::kHeight - config::kSideFontSize);
     }
 
-    void UpdateButtons(bool top, bool bottom)
+    void UpdateButtons(bool left, bool right)
     {
-        printf("ui::UpdateButtons: %b, %b \n", top, bottom);
-        gpio_set_irq_enabled_with_callback(config::kButton_top_pin, GPIO_IRQ_EDGE_FALL, false, ButtonCallback);
-        gpio_set_irq_enabled_with_callback(config::kButton_bottom_pin, GPIO_IRQ_EDGE_FALL, false, ButtonCallback);
-        buttons_state.top = top;
-        buttons_state.bottom = bottom;
+        printf("ui::UpdateButtons: %b, %b \n", left, right);
+        gpio_set_irq_enabled_with_callback(config::kButton_left_pin, GPIO_IRQ_EDGE_FALL, false, ButtonCallback);
+        gpio_set_irq_enabled_with_callback(config::kButton_right_pin, GPIO_IRQ_EDGE_FALL, false, ButtonCallback);
+        buttons_state.left = left;
+        buttons_state.right = right;
         add_alarm_in_ms(1000, EnableButtons, &buttons_state, false);
     }
 
     int64_t EnableButtons(alarm_id_t id, void *buttons_state)
     {
-        printf("ui::EnableButtons: %b, %b \n", static_cast<ButtonsState*>(buttons_state)->top, static_cast<ButtonsState*>(buttons_state)->bottom);
-        gpio_set_irq_enabled_with_callback(config::kButton_top_pin, GPIO_IRQ_EDGE_FALL, static_cast<ButtonsState*>(buttons_state)->top, ButtonCallback);
-        gpio_set_irq_enabled_with_callback(config::kButton_bottom_pin, GPIO_IRQ_EDGE_FALL, static_cast<ButtonsState*>(buttons_state)->bottom, ButtonCallback);
+        printf("ui::EnableButtons: %b, %b \n", static_cast<ButtonsState*>(buttons_state)->left, static_cast<ButtonsState*>(buttons_state)->right);
+        gpio_set_irq_enabled_with_callback(config::kButton_left_pin, GPIO_IRQ_EDGE_FALL, static_cast<ButtonsState*>(buttons_state)->left, ButtonCallback);
+        gpio_set_irq_enabled_with_callback(config::kButton_right_pin, GPIO_IRQ_EDGE_FALL, static_cast<ButtonsState*>(buttons_state)->right, ButtonCallback);
 
         return 0;
+    }
+
+    /**
+     * @brief Sets all timer variables to initial values.
+     * 
+     */
+    void ResetTraining()
+    {
+        distance::Reset();
+        
+        run_distance = 0;
+        second_counter = 0;
+        seconds = 0;
+        minutes = 0;
+        hours = 0;
     }
 }
 

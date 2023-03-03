@@ -25,8 +25,8 @@ namespace config
     inline constexpr uint kSPI_mosi_pin{19};         // MOSI / COPI
     inline constexpr uint kSPI_cs_pin{17};            // SS / CS
     // ---BUTTONS
-    inline constexpr uint kButton_top_pin{21};        // right top
-    inline constexpr uint kButton_bottom_pin{5};        // right bottom
+    inline constexpr uint kButton_left_pin{5};        // left
+    inline constexpr uint kButton_right_pin{21};        // right
 }
 #else
 namespace config

@@ -8,9 +8,30 @@
 
 namespace distance
 {
+    uint8_t data_counter{0};
+    double lat1{0};
+    double lat2{0};
+    double lng1{0};
+    double lng2{0};
+            
+    void Reset();
     std::string AddLeadingZeros(int number);
     double DMMtoDD(const std::string& dmm);
     void CalculateDistance(SensorsData& sensors_data);
+
+
+    /**
+     * @brief Sets all distance variables to initial value.
+     * 
+     */
+    void Reset()
+    {
+        data_counter = 0;
+        lat1 = 0;
+        lat2 = 0;
+        lng1 = 0;
+        lng2 = 0;
+    }
 
     /**
      * @brief Calculates distance between two points described by latitude and longitude.
@@ -24,25 +45,38 @@ namespace distance
      */
     void CalculateDistance(SensorsData& sensors_data)
     {
-        if(sensors_data.prev_latitude != "zero")
+        if(sensors_data.latitude != "zero")
         {
-            constexpr int meridian_length{20004};   // in km
-            constexpr int equator_length{40075};    // in km
-            double lat1{};
-            double lat2{};
-            double lng1{};
-            double lng2{};
-            double rad_lat{};                       // in radians
+            ++data_counter;
+            lat2 += DMMtoDD(sensors_data.latitude);
+            lng2 += DMMtoDD(sensors_data.longitude);
 
-            lat1 = DMMtoDD(sensors_data.prev_latitude);
-            lat2 = DMMtoDD(sensors_data.latitude);
-            lng1 = DMMtoDD(sensors_data.prev_longitude);
-            lng2 = DMMtoDD(sensors_data.longitude);
-            rad_lat = ((lat1 + lat2) / 2) * M_PI / 180;
-            sensors_data.delta_lat = meridian_length * (lat2 - lat1) / 180;
-            sensors_data.delta_lng = equator_length * (lng2 - lng1) / 360 * std::cos(rad_lat);
-            
-            sensors_data.distance = std::sqrt(sensors_data.delta_lat*sensors_data.delta_lat + sensors_data.delta_lng*sensors_data.delta_lng);
+            if(data_counter > 2)    //use average of 3 data readings
+            {
+                data_counter = 0;
+
+                lat2 = lat2/3;
+                lng2 = lng2/3;
+
+                if(lat1 != 0)
+                {
+                    constexpr int meridian_length{20004};   // in km
+                    constexpr int equator_length{40075};    // in km
+                    double rad_lat{};                       // in radians
+
+
+                    rad_lat = ((lat1 + lat2) / 2) * M_PI / 180;
+                    sensors_data.delta_lat = meridian_length * (lat2 - lat1) / 180;
+                    sensors_data.delta_lng = equator_length * (lng2 - lng1) / 360 * std::cos(rad_lat);
+                    
+                    sensors_data.distance = std::sqrt(sensors_data.delta_lat*sensors_data.delta_lat + sensors_data.delta_lng*sensors_data.delta_lng);        
+                }
+
+                lat1 = lat2;
+                lng1 = lng2;
+                lat2 = 0;
+                lng2 = 0;
+            }
         }
     }
 
@@ -119,102 +153,19 @@ namespace distance
 
     void TestCalculateDistance(SensorsData& sd, const double expected_distance)
     {
-        CalculateDistance(sd);
-        printf("distance::TestCalculateDistance: %2.8f - %2.8f || %2.8f == %2.8f \n \n", sd.delta_lat, sd.delta_lng, sd.distance, expected_distance);
+        // CalculateDistance(sd);
+        // printf("distance::TestCalculateDistance: %2.8f - %2.8f || %2.8f == %2.8f \n \n", sd.delta_lat, sd.delta_lng, sd.distance, expected_distance);
     }
 
     void TestSuiteCalculateDistance()
     {
-        SensorsData sd0;
-        // S-W
-        // -0
-        sd0.prev_latitude = "1000.0000S";
-        sd0.prev_longitude = "200.1000W";
-        sd0.latitude = "1100.0000S";
-        sd0.longitude = "200.1000W";
-        double expected_distance_0 = 111.2;
-        TestCalculateDistance(sd0, expected_distance_0);
-        // --
-        sd0.prev_latitude = "0100.0100S";
-        sd0.prev_longitude = "0100.0000W";
-        sd0.latitude = "0100.0100S";
-        sd0.longitude = "0120.0000W";
-        expected_distance_0 = 111.18;
-        TestCalculateDistance(sd0, expected_distance_0);
-        // +0
-        sd0.prev_latitude = "1000.0020S";
-        sd0.prev_longitude = "1020.0020W";
-        sd0.latitude = "1000.0010S";
-        sd0.longitude = "1020.0020W";
-        expected_distance_0 = 0.1112;
-        TestCalculateDistance(sd0, expected_distance_0);
-        // ++
-        sd0.prev_latitude = "1000.0001S";
-        sd0.prev_longitude = "3020.0030W";
-        sd0.latitude = "1000.0001S";
-        sd0.longitude = "3020.0000W";
-        expected_distance_0 = 0.1254;
-        TestCalculateDistance(sd0, expected_distance_0);
-
-        // N-W
-        // +0
-        sd0.prev_latitude = "4124.2982N";
-        sd0.prev_longitude = "212.3740W";
-        sd0.latitude = "4124.3982N";
-        sd0.longitude = "212.3740W";
-        expected_distance_0 = 11.12;
-        TestCalculateDistance(sd0, expected_distance_0);
-        // +-
-        sd0.prev_latitude = "4124.2982N";
-        sd0.prev_longitude = "212.3740W";
-        sd0.latitude = "4124.3982N";
-        sd0.longitude = "212.3840W";
-        expected_distance_0 = 11.17;
-        TestCalculateDistance(sd0, expected_distance_0);
-        // -0
-        sd0.prev_latitude = "1000.0020N";
-        sd0.prev_longitude = "1020.0020W";
-        sd0.latitude = "1000.0010N";
-        sd0.longitude = "1020.0020W";
-        expected_distance_0 = 0.1112;
-        TestCalculateDistance(sd0, expected_distance_0);
-        // -+
-        sd0.prev_latitude = "1000.0020N";
-        sd0.prev_longitude = "3020.0030W";
-        sd0.latitude = "1000.0010N";
-        sd0.longitude = "3020.0000W";
-        expected_distance_0 = 0.1254;
-        TestCalculateDistance(sd0, expected_distance_0);
-
-        // N-E
-        // +0
-        sd0.prev_latitude = "4124.2982N";
-        sd0.prev_longitude = "212.3740E";
-        sd0.latitude = "4124.3982N";
-        sd0.longitude = "212.3740E";
-        expected_distance_0 = 11.12;
-        TestCalculateDistance(sd0, expected_distance_0);
-        // ++
-        sd0.prev_latitude = "4124.2982N";
-        sd0.prev_longitude = "212.3740E";
-        sd0.latitude = "4124.3982N";
-        sd0.longitude = "212.3840E";
-        expected_distance_0 = 11.17;
-        TestCalculateDistance(sd0, expected_distance_0);
-        // -0
-        sd0.prev_latitude = "1000.0020N";
-        sd0.prev_longitude = "1020.0020E";
-        sd0.latitude = "1000.0010N";
-        sd0.longitude = "1020.0020E";
-        expected_distance_0 = 0.1112;
-        TestCalculateDistance(sd0, expected_distance_0);
-        // --
-        sd0.prev_latitude = "1000.0020N";
-        sd0.prev_longitude = "3020.0030E";
-        sd0.latitude = "1000.0010N";
-        sd0.longitude = "3020.0000E";
-        expected_distance_0 = 0.1254;
-        TestCalculateDistance(sd0, expected_distance_0);
+        // SensorsData sd0;
+        // sd0.prev_latitude = "1000.0000S";
+        // sd0.prev_longitude = "200.1000W";
+        // sd0.latitude = "1100.0000S";
+        // sd0.longitude = "200.1000W";
+        // double expected_distance_0 = 111.2;
+        // TestCalculateDistance(sd0, expected_distance_0);
     }
 
 
