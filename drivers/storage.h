@@ -12,8 +12,8 @@
 const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
 static int saved_pages_counter{0};
 static int trainings_counter{0};
-// const int max_pages = 10;
-const int max_pages = (PICO_FLASH_SIZE_BYTES - FLASH_TARGET_OFFSET)/FLASH_PAGE_SIZE;
+const int max_pages = 65'536;                                                            // Arduino Nano RP2040
+// const int max_pages = (PICO_FLASH_SIZE_BYTES - FLASH_TARGET_OFFSET)/FLASH_PAGE_SIZE;     // Pi Pico
 static std::string data_to_store{};
 
 /**
@@ -28,7 +28,7 @@ namespace storage
     void StartNewTraining()
     {
         ++trainings_counter;
-        data_to_store += "$" + trainings_counter;
+        data_to_store += "$" + std::to_string(trainings_counter);
         // TODO saved trainings_counter in FLASH memory
     }
 
@@ -139,7 +139,9 @@ namespace storage
             data_to_store += sensors_data.longitude;
             data_to_store += ";";
 
-            // only for tests
+            // only for debugging purposes
+            data_to_store += std::to_string(sensors_data.lat_dd) + ";";
+            data_to_store += std::to_string(sensors_data.lng_dd) + ";";
             data_to_store += std::to_string(sensors_data.delta_lat) + ";";
             data_to_store += std::to_string(sensors_data.delta_lng) + ";";
             data_to_store += std::to_string(sensors_data.distance) + ";";

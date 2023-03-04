@@ -195,7 +195,7 @@ int main() {
                 current_state = StateId::kStandby;
                 ui::GoToScreen(&display, StateId::kStandby);
                 // TODO turn off GPS
-                btn2_pressed = false;
+                btn1_pressed = false;
             }
             if(btn2_pressed)
             {
@@ -203,7 +203,7 @@ int main() {
                 current_state = StateId::kTraining;
                 ui::GoToScreen(&display, StateId::kTraining);
                 // TODO turn on SENSORS and set up storing in FLASH
-                btn1_pressed = false;
+                btn2_pressed = false;
             }
             if(no_activity_counter > 300)
             {
@@ -225,6 +225,7 @@ int main() {
                 imu.ReadGyroscope(sensors_data);
                 // -- gps & disntace
                 bool gps_data = pa1010d::ReadData1Per10(i2c1, sensors_data);
+                sensors_data.distance = 0;
                 if(gps_data)
                 {
                     distance::CalculateDistance(sensors_data);

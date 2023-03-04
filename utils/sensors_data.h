@@ -15,9 +15,13 @@ struct SensorsData
     std::string utc_time{"zero"};       // in DMM
     std::string prev_utc_time{"zero"};  // in DMM
 
-    double delta_lat{0};                 // in km
-    double delta_lng{0};                 // in km
-    double distance{0};                  // distance between previous and current position, in km 
+    int delta_lat{0};                 // in m
+    int delta_lng{0};                 // in m
+    int distance{0};                  // distance between previous and current position, in m 
+
+    // only for debugging purposes
+    int32_t lat_dd{0};
+    int32_t lng_dd{0};
 };
 
 
