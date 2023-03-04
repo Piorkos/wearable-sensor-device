@@ -21,13 +21,13 @@ namespace ui
     uint8_t seconds{0};
     uint8_t minutes{0};
     uint8_t hours{0};
-    float run_distance{0};       // distance for full trainig
+    int run_distance{0};       // distance for full trainig
 
     
     void InitButtons();
     void UpdateSide(pico_ssd1306::SSD1306* display, std::string side_text_0, std::string side_text_1);
     void GoToScreen(pico_ssd1306::SSD1306* display, StateId screen_id);
-    void UpdateTraining(pico_ssd1306::SSD1306* display);
+    void UpdateTraining(pico_ssd1306::SSD1306* display, int distance);
     void UpdateButtons(bool left, bool right);
     int64_t EnableButtons(alarm_id_t id, void *user_data);
     void ResetTraining();
@@ -147,7 +147,7 @@ namespace ui
      * @param display handler to display
      * @param distance new value of distance
      */
-    void UpdateTraining(pico_ssd1306::SSD1306* display, float distance)
+    void UpdateTraining(pico_ssd1306::SSD1306* display, int distance)
     {
         printf("ui::UpdateTraining \n");
 
@@ -199,7 +199,7 @@ namespace ui
 
         run_distance += distance;
 
-        std::string distance_s{std::to_string(run_distance) + " km"};
+        std::string distance_s{std::to_string(run_distance) + " m"};
         display->clear();
         drawText(display, font_12x16, time.c_str(), 18, 0);
         drawText(display, font_8x8, distance_s.c_str(), 0, 20);
