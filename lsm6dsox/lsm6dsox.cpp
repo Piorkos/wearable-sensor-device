@@ -193,3 +193,25 @@ void Imu::ReadData()
         printf("IMU READING ERROR, bytes= %d \n", bytesRead);
     }
 }
+
+/**
+ * @brief Checks if connection is ok.
+ * 
+ * @return -2 if timeout, -1 if connection broken, 1 if connection ok
+ */
+int Imu::TestConnection()
+{
+    uint8_t buffer;
+    int bytes_read = i2c_read_blocking(i2c_, LSM6DSOX_ADDRESS, &buffer, 1, false);
+    if(bytes_read == PICO_ERROR_GENERIC)
+    {
+        printf("IMU READING ERROR - NO CONNECTION \n");
+        return -2;
+    }
+    else if(bytes_read == PICO_ERROR_TIMEOUT)
+    {
+        printf("IMU READING ERROR - TIMEOUT \n");
+        return -1;
+    }
+    return 1;
+}

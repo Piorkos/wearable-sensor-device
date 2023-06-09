@@ -22,8 +22,8 @@
 
 
 // *************************
-// ---Uncomment below line to switch to read mode. 
-// #define READ_MEMORY
+// ---Uncomment below line to switch to TEST mode. 
+// #define I2C_CONNECTION_TEST
 
 
 // ---flags for reading data from sensors
@@ -113,16 +113,19 @@ int main() {
     pico_ssd1306::SSD1306 display = pico_ssd1306::SSD1306(i2c1, config::kOledAddress, pico_ssd1306::Size::W128xH64);
     StateId current_state{StateId::kInit};
     ui::InitButtons();
+    printf("UI initialized \n");
 
     ui::GoToScreen(&display, current_state);
 
     // ---IMU LSM6DSOX
     Imu imu{i2c0};
     imu.Begin();
+    printf("IMU initialized \n");
 
     // --- COMPASS LSM303D
     std::string compass_coordinates{};
     lsm303d::init(i2c1);
+    printf("COMPASS initialized \n");
 
     // ---GPS PA1010D
     printf("MAX READ = %i \n", max_read);
@@ -130,7 +133,7 @@ int main() {
     hw_write_masked(&i2c1->hw->sda_hold, 5, I2C_IC_SDA_HOLD_IC_SDA_TX_HOLD_BITS);
     // Make the I2C pins available to picotool
     bi_decl(bi_2pins_with_func(config::kI2C_0_sda_pin, config::kI2C_0_scl_pin, GPIO_FUNC_I2C));
-    pa1010d::pa1010d_write_command(i2c1, init_command, strlen(init_command));
+    pa1010d::init(i2c1, init_command, strlen(init_command));
 
     // ---timer
     struct repeating_timer timer_1;
@@ -141,13 +144,60 @@ int main() {
     
     std::string data_to_store{"|"};
 
+    // std::string string_to_save{"AAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDD"};
+    std::string string_to_save{"$1|-470;-658;526;-0.107666;-0.242432;0.965332;2.014160;-1.708984;-1.098633|-470;-658;526;-0.105103;-0.230225;0.971924;-6.225586;3.051758;-0.427246|-465;-625;519;-0.116943;-0.250000;0.947754;-0.549316;-0.183105;-0.610352|-465;-625;519;-0.119507;-0.256226;0."};
+    int debug_counter{0};
+    sensors_data.accelerometer[0] = 11.0;
+    sensors_data.accelerometer[1] = 12.0;
+    sensors_data.accelerometer[2] = 13.0;
+    sensors_data.gyroscope[0] = 21.0;
+    sensors_data.gyroscope[1] = 22.0;
+    sensors_data.gyroscope[2] = 23.0;
+    sensors_data.mag_x = 1;
+    sensors_data.mag_y = 2;
+    sensors_data.mag_z = 3;
+    storage::EraseData();
 
     while(true)
     {
         // printf("while current state = %i \n", current_state);
+        
+#ifdef I2C_CONNECTION_TEST
+        
+        int response{0};
+        std::string msg_0{"COMP-"};
+        std::string msg_1{"GPS-"};
+        std::string msg_2{"IMU-"};
+
+        response = lsm303d::TestConnection(i2c1);
+        if(response == -1){
+            msg_0.append("timeout");
+        }else if(response == -2){
+            msg_0.append("conn");
+        }
+        response = pa1010d::TestConnection(i2c1);
+        if(response == -1){
+            msg_1.append("timeout");
+        }else if(response == -2){
+            msg_1.append("conn");
+        }
+        response = imu.TestConnection();
+        if(response == -1){
+            msg_2.append("timeout");
+        }else if(response == -2){
+            msg_2.append("conn");
+        }
+        printf("MAIN 0: %s \n", msg_0.c_str());
+        printf("MAIN 1: %s \n", msg_1.c_str());
+        printf("MAIN 2: %s \n", msg_2.c_str());
+        ui::GoToScreen(&display, StateId::kError, msg_0, msg_1, msg_2);
+        sleep_ms(2);
+
+#else
+
         switch (current_state)
         {
-        case StateId::kInit:
+        case StateId::kInit:            
             storage::RestoreSavedPagesCounter();
             sleep_ms(3000);
             current_state = StateId::kStandby;
@@ -217,6 +267,7 @@ int main() {
             {
                 printf("StateId::kTraining read_sensors_flag \n");
                 read_sensors_flag = false;
+                std::string error_msg{""};
 
                 // -- compass - LSM303D
                 lsm303d::read(i2c1, sensors_data);
@@ -224,7 +275,13 @@ int main() {
                 imu.ReadAccelerometer(sensors_data);
                 imu.ReadGyroscope(sensors_data);
                 // -- gps & disntace
-                bool gps_data = pa1010d::ReadData1Per10(i2c1, sensors_data);
+                int gps_error{0};
+                bool gps_data = pa1010d::ReadData1Per10(i2c1, sensors_data, gps_error);
+                if (gps_error < 0)
+                {
+                    error_msg.append(":GPS");
+                    pa1010d::init(i2c1, init_command, strlen(init_command));
+                }
                 sensors_data.distance = 0;
                 if(gps_data)
                 {
@@ -234,7 +291,7 @@ int main() {
                 int success = storage::UpdateDataToStore(sensors_data, gps_data);
                 printf("MAIN::training: UpdateDataToStore result = %i \n", success);
 
-                ui::UpdateTraining(&display, sensors_data.distance);
+                ui::UpdateTraining(&display, sensors_data.distance, error_msg);
             }
             
             if(btn2_pressed)
@@ -327,119 +384,6 @@ int main() {
         default:
             break;
         }
-
-
-
-
-
-// #ifndef READ_MEMORY
-        // if(read_sensors_flag)
-        // {
-        //     read_sensors_flag = false;
-            
-        //     // if(gps_fix_count < 20)
-        //     // // if(gps_fix_count < 20)  // if GPS does NOT have a fix
-        //     // {
-        //     //     ++read_gps_flag;
-        //     //     if(read_gps_flag == 10)
-        //     //     {
-        //     //         read_gps_flag = 0;
-
-        //             // Clear array
-        //             // memset(numcommand, 0, max_read);
-        //             // Read and re-format
-        //             int has_fix{false};
-        //             has_fix = pa1010d::HasFix(i2c0, latitude, longitude, utc_time);
-        //             printf("HAS FIX = %b \n", has_fix);
-        //             // pa1010d::read_raw(i2c0, numcommand);
-        //             // pa1010d::parse_GNMRC(numcommand, "GNRMC", latitude, longitude, utc_time);
-                    
-        //             printf("---NO fix\n");
-        //             printf("UTC time: %s.\n", utc_time.c_str());
-        //             printf("latitude: %s, longitude: %s.\n", latitude.c_str(), longitude.c_str());
-        //             printf("---\n");
-
-        //             // if(latitude != "none")
-        //             // {
-        //             //     ++gps_fix_count; 
-        //             // }
-        //             // else if(gps_fix_count > 0)
-        //             // {
-        //             //     --gps_fix_count;
-        //             // }
-        //     //     }
-        //     // }
-        // }
-//             else    // if GPS has a fix
-//             {
-//                 data_to_store += "|";
-
-//                 // ---GPS
-//                 ++read_gps_flag;
-//                 if(read_gps_flag == 10)
-//                 {
-//                     read_gps_flag = 0;
-                    
-//                     // Clear array
-//                     memset(numcommand, 0, max_read);
-//                     pa1010d::read_raw(I2C_1, numcommand);
-//                     pa1010d::parse_GNMRC(numcommand, "GNRMC", latitude, longitude, utc_time);
-//                     data_to_store += utc_time;
-//                     data_to_store += ",";
-//                     data_to_store += latitude;
-//                     data_to_store += ",";
-//                     data_to_store += longitude;
-//                     data_to_store += ",";
-//                 }
-//                 // ---LSM303D - magnetic data
-//                 lsm303d::read(I2C_1, &magX, &magY, &magZ);
-//                 std::string compass_coordinates = std::to_string(magX) + "," + std::to_string(magY) + "," + std::to_string(magZ);
-//                 data_to_store += compass_coordinates;
-//                 data_to_store += ",";
-
-//                 // ---IMU LSM6DSOX
-//                 imu.ReadAccelerometer(accelerometer[0], accelerometer[1], accelerometer[2]);
-//                 imu.ReadGyroscope(gyroscope[0], gyroscope[1], gyroscope[2]);
-//                 std::string x{"x:" + std::to_string(gyroscope[0])};
-//                 std::string y{"y:" + std::to_string(gyroscope[1])};
-//                 std::string z{"z:" + std::to_string(gyroscope[2])};
-//                 // display.clear();
-//                 // drawText(&display, font_12x16, x.c_str(), 0, 0);
-//                 // drawText(&display, font_12x16, y.c_str(), 0, 20);
-//                 // drawText(&display, font_12x16, z.c_str(), 0, 40);
-//                 // display.sendBuffer();
-
-
-//                 // std::string pages = "| " + std::to_string(saved_pages_counter) + " |";
-//                 // display.clear();
-//                 // drawText(&display, font_12x16, utc_time.c_str(), 0 ,0);
-//                 // drawText(&display, font_12x16, pages.c_str(), 0, 20);
-//                 // drawText(&display, font_12x16, latitude.c_str(), 0, 40);
-//                 // display.sendBuffer();
-
-//                 if(data_to_store.length() > FLASH_PAGE_SIZE)
-//                 {
-//                     std::string string_to_store = data_to_store.substr(0, FLASH_PAGE_SIZE);
-//                     data_to_store.erase(0, FLASH_PAGE_SIZE);
-//                     printf("%s", string_to_store.c_str());
-//                     bool success = storage::SaveStringInFlash(string_to_store);
-//                     if(!success)
-//                     {
-//                         printf("ERROR: flash memory full\n");
-//                         // display.clear();
-//                         // drawText(&display, font_12x16, "ERROR:", 0 ,0);
-//                         // drawText(&display, font_12x16, "flash memory", 0, 20);
-//                         // drawText(&display, font_16x32, "full", 0, 40);
-//                         // display.sendBuffer();
-
-//                         sleep_ms(10000);
-
-//                         return 0;
-//                     }
-//                 }
-//             }
-//         }
-
-// #endif
+#endif
     }
 }

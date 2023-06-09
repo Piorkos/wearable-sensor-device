@@ -22,6 +22,8 @@ public:
     int AccelerometerDataAvailable();
     int GyroscopeDataAvailable();
     int TemperatureDataAvailable();
+    int TestConnection();
+    
 private:
     void ReadData();
 };

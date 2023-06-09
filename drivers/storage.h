@@ -95,6 +95,7 @@ namespace storage
             }
 
             offset = (FLASH_TARGET_OFFSET + saved_pages_counter*FLASH_PAGE_SIZE);
+
             // For writing data first time, erase memory of current (i.e. = 0) page
             if(saved_pages_counter == 0)
             {
@@ -129,6 +130,8 @@ namespace storage
      */
     int UpdateDataToStore(SensorsData& sensors_data, bool include_gps)
     {
+        printf("storage::UpdateDataToStore - include_gps=%b\n", include_gps);
+
         data_to_store += "|";
         if(include_gps)
         {
@@ -157,11 +160,13 @@ namespace storage
         data_to_store += ";";
         data_to_store += gyr_str;
 
+        printf("storage::UpdateDataToStore - data_to_store=%s\n", data_to_store.c_str());
+
         if(data_to_store.length() > FLASH_PAGE_SIZE)
         {
             std::string string_to_store = data_to_store.substr(0, FLASH_PAGE_SIZE);
             data_to_store.erase(0, FLASH_PAGE_SIZE);
-            printf("%s \n", string_to_store.c_str());
+            printf("storage::UpdateDataToStore - string sent to storage:%s\n", string_to_store.c_str());
             bool success = storage::SaveStringInFlash(string_to_store);
             if(!success)
             {

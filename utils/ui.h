@@ -26,8 +26,8 @@ namespace ui
     
     void InitButtons();
     void UpdateSide(pico_ssd1306::SSD1306* display, std::string side_text_0, std::string side_text_1);
-    void GoToScreen(pico_ssd1306::SSD1306* display, StateId screen_id);
-    void UpdateTraining(pico_ssd1306::SSD1306* display, int distance);
+    void GoToScreen(pico_ssd1306::SSD1306* display, StateId screen_id, std::string msg_0 = "", std::string msg_1 = "", std::string msg_2 = "");
+    void UpdateTraining(pico_ssd1306::SSD1306* display, int distance, std::string error_msg);
     void UpdateButtons(bool left, bool right);
     int64_t EnableButtons(alarm_id_t id, void *user_data);
     void ResetTraining();
@@ -44,9 +44,9 @@ namespace ui
         gpio_pull_up(config::kButton_right_pin);
     }
 
-    void GoToScreen(pico_ssd1306::SSD1306* display, StateId screen_id)
+    void GoToScreen(pico_ssd1306::SSD1306* display, StateId screen_id, std::string msg_0, std::string msg_1, std::string msg_2)
     {
-        printf("UI::GoToScreen %i \n", screen_id);
+        printf("UI::GoToScreen %s \n", state_id_names[screen_id].c_str());
         switch (screen_id)
         {
         case kInit:
@@ -134,6 +134,15 @@ namespace ui
             UpdateSide(display, "NO", "YES");
             display->sendBuffer();
             break;
+        case kError:
+            UpdateButtons(false, false);
+            display->clear();
+            drawText(display, font_12x16, msg_0.c_str(), 0, 10);
+            drawText(display, font_12x16, msg_1.c_str(), 0, 26);
+            drawText(display, font_12x16, msg_2.c_str(), 0, 42);
+            UpdateSide(display, " ", " ");
+            display->sendBuffer();
+            break;
         
         default:
             break;
@@ -147,7 +156,7 @@ namespace ui
      * @param display handler to display
      * @param distance new value of distance
      */
-    void UpdateTraining(pico_ssd1306::SSD1306* display, int distance)
+    void UpdateTraining(pico_ssd1306::SSD1306* display, int distance, std::string error_msg)
     {
         printf("ui::UpdateTraining \n");
 
@@ -201,8 +210,19 @@ namespace ui
 
         std::string distance_s{std::to_string(run_distance) + " m"};
         display->clear();
-        drawText(display, font_12x16, time.c_str(), 18, 0);
-        drawText(display, font_8x8, distance_s.c_str(), 0, 20);
+        if(error_msg != "")
+        {
+            std::string error_sentance = "E";
+            error_sentance.append(error_msg);
+            drawText(display, font_12x16, error_sentance.c_str(), 0, 0);
+            drawText(display, font_12x16, time.c_str(), 0, 20);
+            drawText(display, font_12x16, distance_s.c_str(), 0, 38);
+        }
+        else
+        {
+            drawText(display, font_12x16, time.c_str(), 18, 0);
+            drawText(display, font_12x16, distance_s.c_str(), 0, 20);
+        }
         UpdateSide(display, " ", "END");
         display->sendBuffer();
     }

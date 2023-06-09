@@ -21,27 +21,33 @@ namespace pa1010d
     double mock_latitude{1000.0000};
     double mock_longitude{1000.0000};
     std::string mock_time{"120000.000"};
+    int error_cache{1};     //1 = no error
 
 
-    void pa1010d_write_command(i2c_inst_t *i2c, const char command[], int com_length);
+    void init(i2c_inst_t *i2c, const char command[], int com_length);
     void parse_GNMRC(char output[], char protocol[], std::string& latitude, std::string& longitude, std::string& utc_time);
-    void read_raw(i2c_inst_t *i2c, char numcommand[]);
+    int read_raw(i2c_inst_t *i2c, char numcommand[]);
     bool HasFix(i2c_inst_t *i2c, SensorsData& sensors_data);
     bool HasFixMock(i2c_inst_t *i2c, SensorsData& sensors_data);
-    bool ReadData1Per10Mock(i2c_inst_t *i2c, SensorsData& sensors_data);
+    bool ReadData1Per10Mock(i2c_inst_t *i2c, SensorsData& sensors_data, int error);
     void MockLatLng(SensorsData& sensors_data);
 
 
-    void pa1010d_write_command(i2c_inst_t *i2c, const char command[], int com_length) 
+    void init(i2c_inst_t *i2c, const char command[], int com_length) 
     {
-        printf("pa1010d::pa1010d_write_command \n");
+        printf("pa1010d::init \n");
 
         // Convert character array to bytes for writing
         uint8_t int_command[com_length];
 
         for (int i = 0; i < com_length; ++i) {
             int_command[i] = command[i];
-            i2c_write_blocking(i2c, addr, &int_command[i], 1, true);
+            if(i < (com_length - 1)){
+                i2c_write_blocking(i2c, addr, &int_command[i], 1, true);
+            }
+            else{
+                i2c_write_blocking(i2c, addr, &int_command[i], 1, false);            
+            }
         }
     }
 
@@ -84,10 +90,10 @@ namespace pa1010d
             
             // printf("Protcol:%s\n", gps_data[0]);
             // printf("UTC Time: %s\n", gps_data[1]);
-            // printf("Status: %s\n", gps_data[2]);
-            // printf("Latitude: %s\n", gps_data[3]);
+            printf("Status: %s\n", gps_data[2]);
+            printf("Latitude: %s\n", gps_data[3]);
             // printf("N/S indicator: %s\n", gps_data[4]);
-            // printf("Longitude: %s\n", gps_data[5]);
+            printf("Longitude: %s\n", gps_data[5]);
             // printf("E/W indicator: %s\n", gps_data[6]);
             // printf("Speed over ground: %s\n", gps_data[7]);
             // printf("Course over ground: %s\n", gps_data[8]);
@@ -110,37 +116,55 @@ namespace pa1010d
             {
                 latitude = "zero";
                 longitude = "zero";
+                utc_time = "zero";
             }
         }
     }
 
-    void read_raw(i2c_inst_t *i2c, char numcommand[]) 
+    int read_raw(i2c_inst_t *i2c, SensorsData& sensors_data) 
     {
+        printf("pa1010d::read_raw \n");
+        memset(numcommand, 0, max_read);
         uint8_t buffer[max_read];
 
         int i = 0;
         bool complete = false;
 
-        int bytesRead = i2c_read_blocking(i2c, addr, buffer, max_read, false);
+        printf("pa1010d::read_raw - 1 \n");
+        int bytes_read = i2c_read_blocking(i2c, addr, buffer, max_read, false);
+        printf("pa1010d::read_raw - 2 \n");
+        if(bytes_read == PICO_ERROR_GENERIC)
+        {
+            printf("GPS READING ERROR - NO CONNECTION \n");
+            sensors_data.latitude = "err";
+            sensors_data.longitude = "err";
+            sensors_data.utc_time = "err";
+            return -2;
+        }
+        else if(bytes_read == PICO_ERROR_TIMEOUT)
+        {
+            printf("GPS READING ERROR - TIMEOUT \n");
+            sensors_data.latitude = "err";
+            sensors_data.longitude = "err";
+            sensors_data.utc_time = "err";
+            return -1;
+        }
+        printf("pa1010d::read_raw - 3 \n");
 
         // Convert bytes to characters
-        if(bytesRead == PICO_ERROR_GENERIC)
+        while (i < bytes_read && complete == false) 
         {
-            printf("GPS READING ERROR, bytes= %d \n", bytesRead);
-        }
-        else
-        {
-            while (i < bytesRead && complete == false) 
+            numcommand[i] = buffer[i];
+            // Stop converting at end of message 
+            if (buffer[i] == 10 && buffer[i + 1] == 10) 
             {
-                numcommand[i] = buffer[i];
-                // Stop converting at end of message 
-                if (buffer[i] == 10 && buffer[i + 1] == 10) 
-                {
-                    complete = true;
-                }
-                i++;
+                complete = true;
             }
+            i++;
         }
+        pa1010d::parse_GNMRC(numcommand, "GNRMC", sensors_data.latitude, sensors_data.longitude, sensors_data.utc_time);
+
+        return 1;
     }
 
     // TODO improve
@@ -154,10 +178,9 @@ namespace pa1010d
                 printf("HasFix: gps_fix_count = %i \n", gps_fix_count);
                 read_gps_flag = 0;
                 memset(numcommand, 0, max_read);
-                pa1010d::read_raw(i2c, numcommand);
-                pa1010d::parse_GNMRC(numcommand, "GNRMC", sensors_data.latitude, sensors_data.longitude, sensors_data.utc_time);
+                pa1010d::read_raw(i2c, sensors_data);
 
-                if(sensors_data.latitude != "zero")
+                if(sensors_data.latitude != "zero" && sensors_data.latitude != "err")
                 {
                     ++gps_fix_count; 
                 }
@@ -179,10 +202,11 @@ namespace pa1010d
      * 
      * @param i2c 
      * @param sensors_data structure to store data read from GPS
+     * @param error 1 if no error, -1 if timeout, -2 if no connection
      * @return true if this was the 1 of 10 calls when it reads data
      * @return false otherwise
      */
-    bool ReadData1Per10(i2c_inst_t *i2c, SensorsData& sensors_data)
+    bool ReadData1Per10(i2c_inst_t *i2c, SensorsData& sensors_data, int& error)
     {
         ++read_gps_flag;
         if(read_gps_flag == 10)
@@ -191,10 +215,16 @@ namespace pa1010d
             read_gps_flag = 0;
 
             memset(numcommand, 0, max_read);
-            pa1010d::read_raw(i2c, numcommand);
-            pa1010d::parse_GNMRC(numcommand, "GNRMC", sensors_data.latitude, sensors_data.longitude, sensors_data.utc_time);
+            printf("pa1010d::ReadData1Per10 - 1 \n");
+            error = pa1010d::read_raw(i2c, sensors_data);
+            error_cache = error;
+            printf("pa1010d::ReadData1Per10 - 2 \n");
 
             return true;
+        }
+        else
+        {
+            error = error_cache;
         }
         
         return false;
@@ -286,6 +316,29 @@ namespace pa1010d
         gps_fix_count = 0;
 
         return true;
+    }
+
+    /**
+     * @brief Checks if connection is ok.
+     * 
+     * @param i2c Either i2c0 or i2c1
+     * @return -2 if timeout, -1 if connection broken, 1 if connection ok
+     */
+    int TestConnection(i2c_inst_t *i2c)
+    {
+        uint8_t buffer;
+        int bytes_read = i2c_read_blocking(i2c, addr, &buffer, 1, false);
+        if(bytes_read == PICO_ERROR_GENERIC)
+        {
+            printf("GPS READING ERROR - NO CONNECTION \n");
+            return -2;
+        }
+        else if(bytes_read == PICO_ERROR_TIMEOUT)
+        {
+            printf("GPS READING ERROR - TIMEOUT \n");
+            return -1;
+        }
+        return 1;
     }
 }
 

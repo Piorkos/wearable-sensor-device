@@ -2,6 +2,7 @@
 #define DATA_H
 
 #include "hardware/i2c.h"
+#include <string>
 
 // *************************
 // ---Uncomment below line to build for Arduino Nano RP2040 Connect. 
@@ -79,7 +80,22 @@ enum StateId
     kEraseData,
     kErasingInProgress,
     kReturn,
+    kError
 };
+
+std::string state_id_names[12] = {"Init",
+    "Standby",
+    "GpsSearch",
+    "GpsReady",
+    "Training",
+    "StopTraining",
+    "ReadData",
+    "ReadingInProgress",
+    "EraseData",
+    "ErasingInProgress",
+    "Return",
+    "Error"
+    };
 
 
 #endif  // DATA_H

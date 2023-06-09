@@ -47,6 +47,36 @@ namespace distance
     {
         if(sensors_data.latitude != "zero")
         {
+            printf("distance::CalculateDistance - ZERO \n");
+
+            // only for debugging purposes
+            sensors_data.lat_dd = -1;
+            sensors_data.lng_dd = -1;
+            // ---
+            sensors_data.delta_lat = -1;
+            sensors_data.delta_lat = -1;
+            sensors_data.delta_lng = -1;
+            sensors_data.delta_lng = -1;
+            
+            sensors_data.distance = -1;         
+        }
+        else if(sensors_data.latitude != "err")
+        {
+            printf("distance::CalculateDistance - ERROR \n");
+            // only for debugging purposes
+            sensors_data.lat_dd = -2;
+            sensors_data.lng_dd = -2;
+            // ---
+            sensors_data.delta_lat = -2;
+            sensors_data.delta_lat = -2;
+            sensors_data.delta_lng = -2;
+            sensors_data.delta_lng = -2;
+            
+            sensors_data.distance = -2;   
+        }
+        else
+        {
+            printf("distance::CalculateDistance - calculation \n");
             ++data_counter;
             lat2 += DMMtoDD(sensors_data.latitude);
             lng2 += DMMtoDD(sensors_data.longitude);

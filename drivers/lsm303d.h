@@ -44,7 +44,7 @@ namespace lsm303d
     void init(i2c_inst_t *i2c)
     {
         uint8_t buf[] = {CTRL_1, 0x57};
-        i2c_write_blocking(i2c, LSM303D_I2C_ADDR, buf, 2, true);
+        i2c_write_blocking(i2c, LSM303D_I2C_ADDR, buf, 2, false);
         buf[0] = CTRL_2;
         buf[1] = 0x00;
         i2c_write_blocking(i2c, LSM303D_I2C_ADDR, buf, 2, false);
@@ -83,6 +83,29 @@ namespace lsm303d
         i2c_write_blocking(i2c, LSM303D_I2C_ADDR, &MAG_Z_LSB, 1, true);
         i2c_read_blocking(i2c, LSM303D_I2C_ADDR, bufferL, 1, false);
         sensors_data.mag_z = combineTwoRegister(bufferM[0], bufferL[0]);
+    }
+
+    /**
+     * @brief Checks if connection is ok.
+     * 
+     * @param i2c Either i2c0 or i2c1
+     * @return -2 if timeout, -1 if connection broken, 1 if connection ok
+     */
+    int TestConnection(i2c_inst_t *i2c)
+    {
+        uint8_t buffer;
+        int bytes_read = i2c_read_blocking(i2c, LSM303D_I2C_ADDR, &buffer, 1, false);
+        if(bytes_read == PICO_ERROR_GENERIC)
+        {
+            printf("COMPAS READING ERROR - NO CONNECTION \n");
+            return -2;
+        }
+        else if(bytes_read == PICO_ERROR_TIMEOUT)
+        {
+            printf("COMPAS READING ERROR - TIMEOUT \n");
+            return -1;
+        }
+        return 1;
     }
 }
 
