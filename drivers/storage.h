@@ -79,7 +79,7 @@ namespace storage
      */
     bool SaveStringInFlash(std::string data_to_save)
     {
-        printf("storage::SaveStringInFlash \n");
+        printf("storage::SaveStringInFlash saved_pages_counter = %i \n", saved_pages_counter);
         if(saved_pages_counter < max_pages)
         {
             uint32_t offset{(FLASH_TARGET_OFFSET + (saved_pages_counter + 16)*FLASH_PAGE_SIZE)};
@@ -142,12 +142,12 @@ namespace storage
             data_to_store += sensors_data.longitude;
             data_to_store += ";";
 
-            // only for debugging purposes
-            data_to_store += std::to_string(sensors_data.lat_dd) + ";";
-            data_to_store += std::to_string(sensors_data.lng_dd) + ";";
-            data_to_store += std::to_string(sensors_data.delta_lat) + ";";
-            data_to_store += std::to_string(sensors_data.delta_lng) + ";";
-            data_to_store += std::to_string(sensors_data.distance) + ";";
+            // // only for debugging purposes
+            // data_to_store += std::to_string(sensors_data.lat_dd) + ";";
+            // data_to_store += std::to_string(sensors_data.lng_dd) + ";";
+            // data_to_store += std::to_string(sensors_data.delta_lat) + ";";
+            // data_to_store += std::to_string(sensors_data.delta_lng) + ";";
+            // data_to_store += std::to_string(sensors_data.distance) + ";";
         }
 
         std::string compass_coordinates = std::to_string(sensors_data.mag_x) + ";" + std::to_string(sensors_data.mag_y) + ";" + std::to_string(sensors_data.mag_z);
@@ -211,7 +211,7 @@ namespace storage
     }
 
     /**
-     * @brief Erases all data, what it actually does is erasing first sector (16*256 bytes) and setting saved_pages_counter=0
+     * @brief Erases all data, what it actually does is erasing first 3 sectors (16*256 bytes) and setting saved_pages_counter=0
      * 
      */
     void EraseData()
@@ -220,7 +220,7 @@ namespace storage
         
         uint32_t ints{};
         ints = save_and_disable_interrupts();
-        flash_range_erase(FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE);
+        flash_range_erase(FLASH_TARGET_OFFSET, 3*FLASH_SECTOR_SIZE);
         restore_interrupts(ints);
 
         saved_pages_counter = 0;

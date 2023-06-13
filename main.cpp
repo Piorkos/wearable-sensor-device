@@ -65,13 +65,18 @@ int main() {
     stdio_init_all();
 
     // ---wait for connection to CoolTerm on Mac
-    sleep_ms(3000);
+    for(int i = 0; i < 10; ++i)
+    {
+        printf("waiting %i \n", i);
+        sleep_ms(1000);
+    }
 
     #ifdef ARDUINO_NANO_RP2040
-        printf("- ARDUINO 1.2 \n");
+        printf("- ARDUINO 1.3 \n");
     #else
         printf("- Pi Pico \n");
     #endif
+
 
     // ---Flash information 
     extern char __flash_binary_end;
@@ -143,20 +148,6 @@ int main() {
     SensorsData sensors_data{};
     
     std::string data_to_store{"|"};
-
-    // std::string string_to_save{"AAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDD"};
-    std::string string_to_save{"$1|-470;-658;526;-0.107666;-0.242432;0.965332;2.014160;-1.708984;-1.098633|-470;-658;526;-0.105103;-0.230225;0.971924;-6.225586;3.051758;-0.427246|-465;-625;519;-0.116943;-0.250000;0.947754;-0.549316;-0.183105;-0.610352|-465;-625;519;-0.119507;-0.256226;0."};
-    int debug_counter{0};
-    sensors_data.accelerometer[0] = 11.0;
-    sensors_data.accelerometer[1] = 12.0;
-    sensors_data.accelerometer[2] = 13.0;
-    sensors_data.gyroscope[0] = 21.0;
-    sensors_data.gyroscope[1] = 22.0;
-    sensors_data.gyroscope[2] = 23.0;
-    sensors_data.mag_x = 1;
-    sensors_data.mag_y = 2;
-    sensors_data.mag_z = 3;
-    storage::EraseData();
 
     while(true)
     {
