@@ -29,7 +29,7 @@ namespace storage
     {
         ++trainings_counter;
         data_to_store += "$" + std::to_string(trainings_counter);
-        // TODO saved trainings_counter in FLASH memory
+        // TODO save trainings_counter in FLASH memory
     }
 
     int GetTrainingsCounter()
@@ -52,8 +52,8 @@ namespace storage
         {
             if(flash_target_contents[(i*FLASH_PAGE_SIZE)] == 0xFF)
             {
-                printf("storage::RestoreSavedPagesCounter RESTORED saved_pages_counter = %i \n", i);
                 saved_pages_counter = i;
+                printf("storage::RestoreSavedPagesCounter RESTORED saved_pages_counter = %i \n", saved_pages_counter);
                 return i;
             }
         }
@@ -222,6 +222,34 @@ namespace storage
         ints = save_and_disable_interrupts();
         flash_range_erase(FLASH_TARGET_OFFSET, 3*FLASH_SECTOR_SIZE);
         restore_interrupts(ints);
+
+        saved_pages_counter = 0;
+    }
+
+    /**
+     * @brief Full, real FLASH erase. Unlike EraseData(), this method erase all pages. NOT SURE IF WORKS GOOD!
+     * 
+     */
+    void FullEraseData()
+    {
+        printf("storage::FullEraseData 1.0 \n");
+
+        int max_sectors = max_pages/16;
+        uint32_t offset{FLASH_TARGET_OFFSET};
+        
+        uint32_t ints{};
+
+
+        for (int i = 0; i < max_sectors; ++i) 
+        {
+            printf("storage::FullEraseData - sector = %i \n", i);
+            ints = save_and_disable_interrupts();
+            flash_range_erase(offset, i*FLASH_SECTOR_SIZE);
+            restore_interrupts(ints);
+
+            offset = (FLASH_TARGET_OFFSET + i*FLASH_SECTOR_SIZE);
+        }
+        
 
         saved_pages_counter = 0;
     }

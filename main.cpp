@@ -65,7 +65,7 @@ int main() {
     stdio_init_all();
 
     // ---wait for connection to CoolTerm on Mac
-    for(int i = 0; i < 10; ++i)
+    for(int i = 0; i < 5; ++i)
     {
         printf("waiting %i \n", i);
         sleep_ms(1000);
@@ -99,6 +99,7 @@ int main() {
     printf("(PICO_FLASH_SIZE_BYTES - start) / FLASH_PAGE_SIZE %u\n", ((PICO_FLASH_SIZE_BYTES - (XIP_BASE + FLASH_TARGET_OFFSET))/FLASH_PAGE_SIZE));
 
 
+
     // *************************
     // ------INITIALIZATION
     // ---I2C
@@ -119,7 +120,6 @@ int main() {
     StateId current_state{StateId::kInit};
     ui::InitButtons();
     printf("UI initialized \n");
-
     ui::GoToScreen(&display, current_state);
 
     // ---IMU LSM6DSOX
@@ -148,6 +148,8 @@ int main() {
     SensorsData sensors_data{};
     
     std::string data_to_store{"|"};
+    
+
 
     while(true)
     {
@@ -190,7 +192,7 @@ int main() {
         {
         case StateId::kInit:            
             storage::RestoreSavedPagesCounter();
-            sleep_ms(3000);
+            sleep_ms(4000);
             current_state = StateId::kStandby;
             ui::GoToScreen(&display, StateId::kStandby);
             break;

@@ -53,7 +53,7 @@ namespace pa1010d
 
     void parse_GNMRC(char output[], char protocol[], std::string& latitude, std::string& longitude, std::string& utc_time)
     {
-        // printf("pa1010d::parse_GNMRC numcommand: %s \n", output);
+        printf("pa1010d::parse_GNMRC numcommand: %s \n", output);
 
         // Finds location of protocol message in output
         char *com_index = strstr(output, protocol);
