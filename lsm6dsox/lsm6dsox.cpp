@@ -46,7 +46,7 @@ void Imu::Begin()
     // Set the Accelerometer control register to work at 104 Hz, 4 g,and in bypass mode and enable ODR/4
     // low pass filter (check figure9 of LSM6DSOX's datasheet)
     buf[0] = LSM6DSOX_CTRL1_XL;
-    buf[1] = 0x4A;
+    buf[1] = 0x4E;
     i2c_write_blocking(i2c_, LSM6DSOX_ADDRESS, buf, 2, false);
 
     // set gyroscope power mode to high performance and bandwidth to 16 MHz
