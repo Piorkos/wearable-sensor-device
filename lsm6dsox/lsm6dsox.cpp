@@ -84,9 +84,9 @@ void Imu::ReadAccelerometer(SensorsData& sensors_data)
     }
     else
     {
-        sensors_data.accelerometer[0] = buf[0] * 4.0 / 32768.0;
-        sensors_data.accelerometer[1] = buf[1] * 4.0 / 32768.0;
-        sensors_data.accelerometer[2] = buf[2] * 4.0 / 32768.0;
+        sensors_data.accelerometer[0] = buf[0] * 8.0 / 32768.0;
+        sensors_data.accelerometer[1] = buf[1] * 8.0 / 32768.0;
+        sensors_data.accelerometer[2] = buf[2] * 8.0 / 32768.0;
     }
 }
 

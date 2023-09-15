@@ -72,7 +72,7 @@ int main() {
     }
 
     #ifdef ARDUINO_NANO_RP2040
-        printf("- ARDUINO 1.3 \n");
+        printf("- ARDUINO : v1.4 \n");
     #else
         printf("- Pi Pico \n");
     #endif
