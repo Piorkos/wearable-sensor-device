@@ -60,7 +60,7 @@ namespace ui
             UpdateButtons(true, true);
             display->clear();
             drawText(display, font_12x16, "START", 20, 0);
-            drawText(display, font_12x16, "TRAINING?", 0, 20);
+            drawText(display, font_12x16, "TRACKING?", 0, 20);
             UpdateSide(display, "OPTIONS", "YES");
             display->sendBuffer();
             break;
@@ -83,8 +83,8 @@ namespace ui
         case kTraining:
             UpdateButtons(false, true);
             display->clear();
-            drawText(display, font_12x16, "DISTANCE:", 20, 0);
-            drawText(display, font_12x16, "TIME:", 18, 20);
+            // drawText(display, font_12x16, "DISTANCE:", 20, 0);
+            drawText(display, font_16x32, "TIME:", 2, 0);
             UpdateSide(display, " ", "END");
             display->sendBuffer();
             break;
@@ -92,7 +92,7 @@ namespace ui
             UpdateButtons(true, true);
             display->clear();
             drawText(display, font_12x16, "END", 40, 0);
-            drawText(display, font_12x16, "TRAINING?", 18, 20);
+            drawText(display, font_12x16, "TRACKING?", 18, 20);
             UpdateSide(display, "NO", "YES");
             display->sendBuffer();
             break;
@@ -215,13 +215,13 @@ namespace ui
             std::string error_sentance = "E";
             error_sentance.append(error_msg);
             drawText(display, font_12x16, error_sentance.c_str(), 0, 0);
-            drawText(display, font_12x16, time.c_str(), 0, 20);
-            drawText(display, font_12x16, distance_s.c_str(), 0, 38);
+            drawText(display, font_16x32, time.c_str(), 0, 20);
+            // drawText(display, font_12x16, distance_s.c_str(), 0, 38);
         }
         else
         {
-            drawText(display, font_12x16, time.c_str(), 18, 0);
-            drawText(display, font_12x16, distance_s.c_str(), 0, 20);
+            drawText(display, font_16x32, time.c_str(), 2, 0);
+            // drawText(display, font_12x16, distance_s.c_str(), 0, 20);
         }
         UpdateSide(display, " ", "END");
         display->sendBuffer();
