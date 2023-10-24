@@ -1,3 +1,7 @@
 # Wearable Data Collector
-Device to collect data from GPS, accelerometer, gyroscope and e-compass.
-Most important was to obtain a working device asap, hence the code architecture and design are far from perfection.
+Firmware for collecting data from GPS, accelerometer, gyroscope and e-compass. It is designed to work with given hardware components:
+- microcontroller RP2040
+- GPS 
+- e-compass 
+
+**Note:** The objective was to obtain a working device as soon as possible, hence the code architecture and design are far from perfection.
