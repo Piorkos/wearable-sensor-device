@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="/img/readme_header.JPG" />
+</p>
+
 # Wearable device for data collection from sensors
 This device is a versatile tool designed for collecting and storing data from a gyroscope, accelerometer, e-compass, and GPS. It is intended to be worn on the wrist. 
 Hardware components:
