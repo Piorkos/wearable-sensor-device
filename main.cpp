@@ -355,7 +355,7 @@ int main() {
         case StateId::kErasingInProgress:
             // Starts erasing data - actually erases first sector (16*256 bytes) and set saved_pages_counter=0
             storage::EraseData();
-            sleep_ms(3);
+            sleep_ms(2000);
 
             current_state = StateId::kStandby;
             ui::GoToScreen(&display, StateId::kStandby);

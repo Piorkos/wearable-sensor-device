@@ -92,7 +92,7 @@ namespace ui
             UpdateButtons(true, true);
             display->clear();
             drawText(display, font_12x16, "END", 40, 0);
-            drawText(display, font_12x16, "TRACKING?", 18, 20);
+            drawText(display, font_12x16, "TRACKING?", 14, 20);
             UpdateSide(display, "NO", "YES");
             display->sendBuffer();
             break;
@@ -129,8 +129,8 @@ namespace ui
         case kReturn:
             UpdateButtons(true, true);
             display->clear();
-            drawText(display, font_12x16, "MAIN", 26, 0);
-            drawText(display, font_12x16, "MENU?", 18, 20);
+            drawText(display, font_12x16, "HOME", 26, 0);
+            drawText(display, font_12x16, "SCREEN?", 18, 20);
             UpdateSide(display, "NO", "YES");
             display->sendBuffer();
             break;
@@ -220,7 +220,7 @@ namespace ui
         }
         else
         {
-            drawText(display, font_16x32, time.c_str(), 2, 0);
+            drawText(display, font_16x32, time.c_str(), 16, 10);
             // drawText(display, font_12x16, distance_s.c_str(), 0, 20);
         }
         UpdateSide(display, " ", "END");
