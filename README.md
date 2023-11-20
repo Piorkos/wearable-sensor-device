@@ -14,8 +14,10 @@ This device is a versatile tool designed for collecting and storing data from a 
 2. Read data from the memory and send it via serial port to the computer.
 3. Erase data from the memory.
 
+UI is composed from display and 2 buttons.
+
 <p align="center">
-  <img src="/img/readme_read_data.png" />
+  <img width="600" src="/img/readme_erase_data.jpg" />
 </p>
 
 
