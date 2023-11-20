@@ -5,7 +5,7 @@
 # Wearable device for data collection from sensors
 This device is a versatile tool designed for collecting and storing data from a gyroscope, accelerometer, e-compass, and GPS.
 
-**Note:** The objective was to obtain a working device as soon as possible, hence the code design is far from perfection.
+<ins>**Note:** The objective was to obtain a working device as soon as possible, hence the code design is far from perfection.</ins>
 
 ---
 
@@ -13,6 +13,11 @@ This device is a versatile tool designed for collecting and storing data from a 
 1. Capture data from gyroscope, accelerometer, magnetometer, GPS and then store it in the Flash memory. 
 2. Read data from the memory and send it via serial port to the computer.
 3. Erase data from the memory.
+
+<p align="center">
+  <img src="/img/readme_read_data.png" />
+</p>
+
 
 ### Hardware
 The firmware was designed for following hardware:
