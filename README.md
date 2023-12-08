@@ -14,7 +14,7 @@ This device is a versatile tool designed for collecting and storing data from a 
 2. Read data from the memory and send it via serial port to the computer.
 3. Erase data from the memory.
 
-UI is composed from display and 2 buttons.
+Core of this device is a **Cortex-M** microcontroller. It captures data from sensors via **I2C**. Two buttons, connected via **GPIO**, allow to switch between functions. OLED display provide information to the user about current state and possible functions.
 
 <p align="center">
   <img width="600" src="/img/readme_erase_data.jpg" />
