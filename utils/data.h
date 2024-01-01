@@ -8,7 +8,7 @@
 // ---Uncomment below line to build for Arduino Nano RP2040 Connect. 
 #define ARDUINO_NANO_RP2040
 // ---Uncoment below line to switch to Sharp MIP display
-// #define SHARP_MIP
+#define SHARP_MIP
 
 
 #ifdef ARDUINO_NANO_RP2040
@@ -22,9 +22,9 @@ namespace config
     inline constexpr uint kI2C_1_sda_pin{18};
     inline constexpr uint kI2C_1_scl_pin{19};   
     // ---SPI - Confirm pins!!!
-    inline constexpr uint kSPI_sck_pin{18};          // SCLK / SCK
-    inline constexpr uint kSPI_mosi_pin{19};         // MOSI / COPI
-    inline constexpr uint kSPI_cs_pin{17};            // SS / CS
+    inline constexpr uint kSPI_sck_pin{6};          // SCLK / SCK
+    inline constexpr uint kSPI_mosi_pin{7};         // MOSI / COPI
+    inline constexpr uint kSPI_cs_pin{5};            // SS / CS
     // ---BUTTONS
     inline constexpr uint kButton_left_pin{5};        // left
     inline constexpr uint kButton_right_pin{21};        // right
@@ -40,7 +40,7 @@ namespace config
     // ---SPI - Confirm pins!!!
     inline constexpr uint kSPI_sck_pin{6};          // SCLK / SCK
     inline constexpr uint kSPI_mosi_pin{7};         // MOSI / COPI
-    inline constexpr uint kSPI_cs_pin{};            // SS / CS
+    inline constexpr uint kSPI_cs_pin{5};           // SS / CS
     // ---BUTTONS
     inline constexpr uint kButton_1_pin{};        // right top
     inline constexpr uint kButton_2_pin{};        // right bottom
