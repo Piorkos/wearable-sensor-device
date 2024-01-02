@@ -23,6 +23,7 @@ uint8_t SwapBigToLittleEndian(uint8_t big_endian)
 namespace sharp_mip
 {
     void PrintBinaryArray(const uint8_t* array_to_print, size_t width, size_t heigth);
+    void ClearScreen();
 }
 
 namespace sharp_mip
@@ -48,8 +49,17 @@ namespace sharp_mip
         // TODO x jest wyrazony w pixelach, natomiast screen_state uzywa byte (8 pixeli) jako jednostke bazowa
         // Uwzglednic to, gdy wartosc z kFont_12_16 jest przypisywana do screen_state
         
+
+
         uint8_t font_height_in_bits = 16;   // for kFont_12_16
         uint8_t font_width_in_bytes = 2;    // for kFont_12_16
+        
+        // Clear lines
+        for(int i = y; i < (y + font_height_in_bits); ++i) 
+        {
+            sharp_mip::screen_state[i] = 0b11111111;
+        }
+
         char first_char_in_fonts = '0';
         uint16_t char_counter{0};
         for(const auto& character : new_string)
@@ -68,7 +78,7 @@ namespace sharp_mip
             ++char_counter;
         }
 
-        PrintBinaryArray(screen_state, screen_cols, config::kHeight);
+        // PrintBinaryArray(screen_state, screen_cols, config::kHeight);
     }
 
     /**
@@ -80,13 +90,23 @@ namespace sharp_mip
     void RefreshScreen(uint8_t line_start, uint8_t line_end)
     {
         printf("--sharp_mip::RefreshScreen \n");
-
+        
         gpio_put(config::kSPI_cs_pin, 1);
 
         int length_of_buffer = 1 + (line_end - line_start) * (1 + screen_cols + 1) + 1;
         uint8_t buf[length_of_buffer];
         int buf_iterator{0};
-        buf[buf_iterator] = 0b10000000;    // command
+        // buf[buf_iterator] = 0b10000000;    // command
+        if(vcom_bool_)
+        {
+            buf[0] = 0b11000000;
+            vcom_bool_ = false;
+        }
+        else
+        {
+            buf[0] = 0b10000000;
+            vcom_bool_ = true;
+        }
         buf_iterator++;
 
         for (size_t i = line_start; i < line_end; i++)
@@ -104,7 +124,7 @@ namespace sharp_mip
         }
 
         buf[buf_iterator] = 0b00000000;     //end transmission trailer
-        spi_write_blocking(spi0, buf, length_of_buffer);
+        spi_write_blocking(spi1, buf, length_of_buffer);
         gpio_put(config::kSPI_cs_pin, 0);
         sleep_ms(10);
     }
@@ -124,18 +144,20 @@ namespace sharp_mip
 
         gpio_put(config::kSPI_cs_pin, 1);
         uint8_t buf[2];
-        buf[0] = 0b01100000;
+        // buf[0] = 0b01100000;    // command
+        if(vcom_bool_)
+        {
+            buf[0] = 0b01100000;
+            vcom_bool_ = false;
+        }
+        else
+        {
+            buf[0] = 0b00100000;
+            vcom_bool_ = true;
+        }
         buf[1] = 0b00000000;
-        spi_write_blocking(spi0, buf, 2);
+        spi_write_blocking(spi1, buf, 2);
         gpio_put(config::kSPI_cs_pin, 0);
-        sleep_ms(10);
-
-        gpio_put(config::kSPI_cs_pin, 1);
-        buf[0] = 0b00100000;
-        buf[1] = 0b00000000;
-        spi_write_blocking(spi0, buf, 2);
-        gpio_put(config::kSPI_cs_pin, 0);
-        sleep_ms(10);
     }
 
     /**
@@ -144,7 +166,7 @@ namespace sharp_mip
      */
     void ToggleVCOM()
     {
-        printf("--sharp_mip::ToggleVCOM \n");
+        // printf("--sharp_mip::ToggleVCOM \n");
         gpio_put(config::kSPI_cs_pin, 1);
         uint8_t buf[22];
         if(vcom_bool_)
@@ -158,7 +180,7 @@ namespace sharp_mip
             vcom_bool_ = true;
         }
         buf[1] = 0b00000000;
-        spi_write_blocking(spi0, buf, 2);
+        spi_write_blocking(spi1, buf, 2);
         gpio_put(config::kSPI_cs_pin, 0);
         sleep_ms(10);
     }
