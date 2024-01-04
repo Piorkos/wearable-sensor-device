@@ -100,7 +100,6 @@ int main() {
     printf("(PICO_FLASH_SIZE_BYTES - start) / FLASH_PAGE_SIZE %u\n", ((PICO_FLASH_SIZE_BYTES - (XIP_BASE + FLASH_TARGET_OFFSET))/FLASH_PAGE_SIZE));
 
 
-
     // *************************
     // ------INITIALIZATION
     // ---I2C

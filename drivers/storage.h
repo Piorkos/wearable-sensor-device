@@ -8,7 +8,7 @@
 
 // We're going to erase and reprogram a region 256k from the start of flash.
 // Once done, we can access this at XIP_BASE + 256k.
-#define FLASH_TARGET_OFFSET (132 * 1024)
+#define FLASH_TARGET_OFFSET (512 * 1024)
 const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
 static int saved_pages_counter{0};
 static int trainings_counter{0};
@@ -240,7 +240,7 @@ namespace storage
         uint32_t ints{};
 
 
-        for (int i = 0; i < max_sectors; ++i) 
+        for (int i = 24; i < max_sectors; ++i) 
         {
             printf("storage::FullEraseData - sector = %i \n", i);
             ints = save_and_disable_interrupts();
