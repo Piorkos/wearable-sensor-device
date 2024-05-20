@@ -35,7 +35,6 @@ int transfer(uint8_t buf_to_write, uint8_t buf_to_read = 11)
     int response{0};
     response = spi_write_read_blocking(SPIWIFI, &buf_to_write, &buf_to_read, 1);
     // printf("transfer - response = %u, buf_to_read = %u \n", response, buf_to_read);
-    spi_read_
 
     return response;
 }
