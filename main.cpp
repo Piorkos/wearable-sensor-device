@@ -1,5 +1,144 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "pico/stdlib.h"
+#include "hardware/spi.h"
+
+#define SET_PASSPHRASE_CMD  0x11
+#define START_CMD           0xE0
+#define END_CMD             0xEE
+#define REPLY_FLAG          1<<7
+
+#define NINA_GPIO0		(2u)
+#define SPI1_CIPO       (8u)
+#define SPI1_COPI       (11u)
+#define SPI1_SCK        (14u)
+#define SPIWIFI_SS		(9u)
+#define SPIWIFI 		spi1
+
+#define DEBUG_PIN       (6u)
+
+static uint8_t SLAVEREADY  = 10;  // handshake pin
+static uint8_t SLAVERESET  = 3;  // reset pin
+
+void debugMark(int mark_width)
+{
+    gpio_put(DEBUG_PIN, 1);
+    sleep_ms(mark_width);
+    gpio_put(DEBUG_PIN, 0);
+    sleep_ms(2 * mark_width);
+}
+
+int transfer(uint8_t buf_to_write, uint8_t buf_to_read = 11)
+{
+    debugMark(5);
+    // printf("transfer - buf_to_write = %u, buf_to_read = %u \n", buf_to_write, buf_to_read);
+    int response{0};
+    response = spi_write_read_blocking(SPIWIFI, &buf_to_write, &buf_to_read, 1);
+    // printf("transfer - response = %u, buf_to_read = %u \n", response, buf_to_read);
+    spi_read_
+
+    return response;
+}
+
+void sendCmd(uint8_t cmd, uint8_t numParam)
+{
+    // printf("sendCmd - cmd = %u, numParam = %u \n", cmd, numParam);
+
+    uint8_t buf_to_write{START_CMD};
+    transfer(buf_to_write);
+    buf_to_write = cmd & ~(REPLY_FLAG);
+    transfer(buf_to_write);
+    buf_to_write = numParam;
+    transfer(buf_to_write);
+
+    if(numParam == 0)
+    {
+        // printf("sendCmd - END_CMD \n");
+        buf_to_write = END_CMD;
+        transfer(buf_to_write);
+    }
+}
+
+int main() {
+
+    stdio_init_all();
+
+    // // ---wait for connection to CoolTerm on Mac
+    // for(int i = 0; i < 5; ++i)
+    // {
+    //     printf("AAA waiting %i \n", i);
+    //     sleep_ms(1000);
+    // }
+
+    // init pin for debug mark
+    gpio_init(DEBUG_PIN);
+    gpio_set_dir(DEBUG_PIN, GPIO_OUT);
+
+    sleep_ms(1000);
+    debugMark(30);
+    debugMark(20);
+
+    gpio_init(SPIWIFI_SS);
+    gpio_set_dir(SPIWIFI_SS, GPIO_OUT);
+    gpio_init(SLAVEREADY);
+    gpio_set_dir(SLAVEREADY, GPIO_IN);
+    gpio_init(SLAVERESET);
+    gpio_set_dir(SLAVERESET, GPIO_OUT);
+    gpio_init(NINA_GPIO0);
+    gpio_set_dir(NINA_GPIO0, GPIO_OUT);
+
+    debugMark(20);
+
+    gpio_put(NINA_GPIO0, 1);
+    gpio_put(SPIWIFI_SS, 1);
+    gpio_put(SLAVERESET, 0);
+    sleep_ms(10);
+    gpio_put(SLAVERESET, 1);
+    sleep_ms(750);
+    gpio_put(NINA_GPIO0, 0);
+    gpio_set_dir(NINA_GPIO0, GPIO_IN);
+
+    debugMark(20);
+    debugMark(20);
+
+
+    // initialize SPI
+    spi_init(SPIWIFI, 8000000);
+    spi_set_format(SPIWIFI, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
+    gpio_set_function(SPI1_COPI, GPIO_FUNC_SPI);
+    gpio_set_function(SPI1_SCK, GPIO_FUNC_SPI);
+
+    // sleep_ms(10);
+
+    gpio_put(SPIWIFI_SS, 0);
+    sendCmd(SET_PASSPHRASE_CMD, 2);
+    gpio_put(SPIWIFI_SS, 1);
+
+
+    debugMark(20);
+
+    while(true)
+    {
+        sleep_ms(10);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+
+#include <stdio.h>
+#include <stdlib.h>
 #include <string>
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
@@ -14,12 +153,13 @@
 #include "drivers/lsm303d.h"            // compass
 #include "drivers/storage.h"            // onboard Flesh memory
 #include "drivers/pa1010d.h"            // GPS
-#include "drivers/sharp_mip/write.h"    // Sharp MIP
+// #include "drivers/sharp_mip/write.h"    // Sharp MIP
 #include "lsm6dsox/lsm6dsox.h"  // onboard's gyro, accel
 #include "utils/ui.h"           // controls UI
 #include "utils/data.h"         // pins, parameters,...
 #include "utils/sensors_data.h" // Struct to hold data from sensors
 #include "utils/distance.h"
+#include "wifi/WiFi.h"
 
 
 // *************************
@@ -66,7 +206,7 @@ int main() {
     stdio_init_all();
 
     // ---wait for connection to CoolTerm on Mac
-    for(int i = 0; i < 3; ++i)
+    for(int i = 0; i < 5; ++i)
     {
         printf("waiting %i \n", i);
         sleep_ms(1000);
@@ -429,3 +569,5 @@ int main() {
 #endif
     }
 }
+
+*/
