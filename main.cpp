@@ -155,11 +155,10 @@ int main() {
 
     // --- COMPASS LSM303D
     std::string compass_coordinates{};
-    lsm303d::init(i2c1);
+    Compass compass;
     printf("COMPASS initialized \n");
 
     // ---GPS PA1010D
-    printf("MAX READ = %i \n", max_read);
     char init_command[] = "$PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n";
     hw_write_masked(&i2c1->hw->sda_hold, 5, I2C_IC_SDA_HOLD_IC_SDA_TX_HOLD_BITS);
     // Make the I2C pins available to picotool
@@ -187,7 +186,7 @@ int main() {
         std::string msg_1{"GPS-"};
         std::string msg_2{"IMU-"};
 
-        response = lsm303d::TestConnection(i2c1);
+        response = compass.TestConnection();
         if(response == -1){
             msg_0.append("timeout");
         }else if(response == -2){
@@ -299,7 +298,7 @@ int main() {
                 std::string error_msg{""};
 
                 // -- compass - LSM303D
-                lsm303d::read(i2c1, sensors_data);
+                compass.Read(sensors_data);
                 // -- gyro, accel - LSM6DSOX
                 imu.ReadAccelerometer(sensors_data);
                 imu.ReadGyroscope(sensors_data);

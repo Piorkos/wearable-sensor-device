@@ -7,16 +7,38 @@
 #include "../utils/sensors_data.h"
 #include "../utils/distance.h"      // used only for tests-mock
 
+#define ADDR        0x10
+#define MAX_READ    250
 
-const int addr = 0x10;
-const int max_read = 250;
+class GPS
+{
+public:
+    GPS();
+    bool HasFix(i2c_inst_t *i2c, SensorsData& sensors_data);
+    bool ReadData1Per10(i2c_inst_t *i2c, SensorsData& sensors_data, int& error);
+    int TestConnection(i2c_inst_t *i2c);
 
+private:
+    void parse_GNMRC(char output[], char protocol[], std::string& latitude, std::string& longitude, std::string& utc_time);
+    int read_raw(i2c_inst_t *i2c, SensorsData& sensors_data);
+
+    i2c_inst_t *i2c{i2c1};
+    char init_command[] = "$PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n";
+    int gps_fix_count{0};
+    int read_gps_flag{0};
+    char numcommand[MAX_READ];
+    // 140814.000,4124.2987N,00212.3749E
+    double mock_latitude{1000.0000};
+    double mock_longitude{1000.0000};
+    std::string mock_time{"120000.000"};
+    int error_cache{1};     //1 = no error
+};
 
 namespace pa1010d
 {
     int gps_fix_count{0};
     int read_gps_flag{0};
-    char numcommand[max_read];
+    char numcommand[MAX_READ];
     // 140814.000,4124.2987N,00212.3749E
     double mock_latitude{1000.0000};
     double mock_longitude{1000.0000};
@@ -43,10 +65,10 @@ namespace pa1010d
         for (int i = 0; i < com_length; ++i) {
             int_command[i] = command[i];
             if(i < (com_length - 1)){
-                i2c_write_blocking(i2c, addr, &int_command[i], 1, true);
+                i2c_write_blocking(i2c, ADDR, &int_command[i], 1, true);
             }
             else{
-                i2c_write_blocking(i2c, addr, &int_command[i], 1, false);            
+                i2c_write_blocking(i2c, ADDR, &int_command[i], 1, false);            
             }
         }
     }
@@ -124,14 +146,14 @@ namespace pa1010d
     int read_raw(i2c_inst_t *i2c, SensorsData& sensors_data) 
     {
         printf("pa1010d::read_raw \n");
-        memset(numcommand, 0, max_read);
-        uint8_t buffer[max_read];
+        memset(numcommand, 0, MAX_READ);
+        uint8_t buffer[MAX_READ];
 
         int i = 0;
         bool complete = false;
 
         printf("pa1010d::read_raw - 1 \n");
-        int bytes_read = i2c_read_blocking(i2c, addr, buffer, max_read, false);
+        int bytes_read = i2c_read_blocking(i2c, ADDR, buffer, MAX_READ, false);
         printf("pa1010d::read_raw - 2 \n");
         if(bytes_read == PICO_ERROR_GENERIC)
         {
@@ -177,7 +199,7 @@ namespace pa1010d
             {
                 printf("HasFix: gps_fix_count = %i \n", gps_fix_count);
                 read_gps_flag = 0;
-                memset(numcommand, 0, max_read);
+                memset(numcommand, 0, MAX_READ);
                 pa1010d::read_raw(i2c, sensors_data);
 
                 if(sensors_data.latitude != "zero" && sensors_data.latitude != "err")
@@ -214,7 +236,7 @@ namespace pa1010d
             printf("pa1010d::ReadData1Per10 - read_gps_flag = 10 \n");
             read_gps_flag = 0;
 
-            memset(numcommand, 0, max_read);
+            memset(numcommand, 0, MAX_READ);
             printf("pa1010d::ReadData1Per10 - 1 \n");
             error = pa1010d::read_raw(i2c, sensors_data);
             error_cache = error;
@@ -327,7 +349,7 @@ namespace pa1010d
     int TestConnection(i2c_inst_t *i2c)
     {
         uint8_t buffer;
-        int bytes_read = i2c_read_blocking(i2c, addr, &buffer, 1, false);
+        int bytes_read = i2c_read_blocking(i2c, ADDR, &buffer, 1, false);
         if(bytes_read == PICO_ERROR_GENERIC)
         {
             printf("GPS READING ERROR - NO CONNECTION \n");
