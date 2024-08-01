@@ -16,10 +16,11 @@
 #include "drivers/pa1010d.h"            // GPS
 #include "drivers/sharp_mip/write.h"    // Sharp MIP
 #include "lsm6dsox/lsm6dsox.h"  // onboard's gyro, accel
+#include "utils/distance.h"
 #include "utils/ui.h"           // controls UI
 #include "utils/data.h"         // pins, parameters,...
 #include "utils/sensors_data.h" // Struct to hold data from sensors
-#include "utils/distance.h"
+
 
 
 // *************************
@@ -163,7 +164,7 @@ int main() {
     hw_write_masked(&i2c1->hw->sda_hold, 5, I2C_IC_SDA_HOLD_IC_SDA_TX_HOLD_BITS);
     // Make the I2C pins available to picotool
     bi_decl(bi_2pins_with_func(config::kI2C_0_sda_pin, config::kI2C_0_scl_pin, GPIO_FUNC_I2C));
-    pa1010d::init(i2c1, init_command, strlen(init_command));
+    GPS gps;
 
     // ---timer
     struct repeating_timer timer_1;
@@ -192,7 +193,7 @@ int main() {
         }else if(response == -2){
             msg_0.append("conn");
         }
-        response = pa1010d::TestConnection(i2c1);
+        response = gps.TestConnection(i2c1);
         if(response == -1){
             msg_1.append("timeout");
         }else if(response == -2){
@@ -254,7 +255,7 @@ int main() {
             {
                 read_sensors_flag = false;
                 int has_fix{false};
-                has_fix = pa1010d::HasFix(i2c1, sensors_data);
+                has_fix = gps.HasFix(sensors_data);
                 if(has_fix)
                 {
                     no_activity_counter = 0;
@@ -304,11 +305,11 @@ int main() {
                 imu.ReadGyroscope(sensors_data);
                 // -- gps & disntace
                 int gps_error{0};
-                bool gps_data = pa1010d::ReadData1Per10(i2c1, sensors_data, gps_error);
+                bool gps_data = gps.ReadData1Per10(sensors_data, gps_error);
                 if (gps_error < 0)
                 {
                     error_msg.append(":GPS");
-                    pa1010d::init(i2c1, init_command, strlen(init_command));
+                    // TODO maybe it would be good to reset GPS here
                 }
                 sensors_data.distance = 0;
                 if(gps_data)
