@@ -83,22 +83,27 @@ int main() {
     // ---Flash information 
     extern char __flash_binary_end;
     uintptr_t end = (uintptr_t) &__flash_binary_end;
-    printf("main: Binary ends at %8x\n", end);
-    printf("main: Binary ends at %u\n", end);
-    printf("flash_target_contents %8x\n", flash_target_contents);
-    printf("flash_target_contents %u\n", flash_target_contents);
-    printf("max_pages %u\n", max_pages);
-    printf("XIP_BASE %8x\n", XIP_BASE);
-    printf("XIP_BASE %u\n", XIP_BASE);
-    printf("FLASH_TARGET_OFFSET %8x\n", FLASH_TARGET_OFFSET);
-    printf("FLASH_TARGET_OFFSET %u\n", FLASH_TARGET_OFFSET);
-    printf("FLASH_PAGE_SIZE %8x\n", FLASH_PAGE_SIZE);
-    printf("FLASH_PAGE_SIZE %u\n", FLASH_PAGE_SIZE);
-    printf("PICO_FLASH_SIZE_BYTES %8x\n", PICO_FLASH_SIZE_BYTES);
-    printf("PICO_FLASH_SIZE_BYTES %u\n", PICO_FLASH_SIZE_BYTES);
-    printf("FLASH_TARGET_OFFSET / FLASH_PAGE_SIZE %u\n", (FLASH_TARGET_OFFSET/FLASH_PAGE_SIZE));
-    printf("PICO_FLASH_SIZE_BYTES / FLASH_PAGE_SIZE %u\n", (PICO_FLASH_SIZE_BYTES/FLASH_PAGE_SIZE));
-    printf("(PICO_FLASH_SIZE_BYTES - start) / FLASH_PAGE_SIZE %u\n", ((PICO_FLASH_SIZE_BYTES - (XIP_BASE + FLASH_TARGET_OFFSET))/FLASH_PAGE_SIZE));
+    /* At runtime, you can determine the end of the program in flash from 
+        the intrinsic variable __flash_binary_end (which is a memory address, not an offset in flash). 
+        There's no particular reason to think that this position will align on a 4kB boundary so, 
+        if you wanted to use it to locate the start of the writeable area of flash, you'd have to round it up.
+    */
+    printf("main: End of the program in flash %8x\n", end);
+    printf("main: End of the program in flash %u\n", end);
+    // printf("flash_target_contents %8x\n", flash_target_contents);
+    // printf("flash_target_contents %u\n", flash_target_contents);
+    // printf("max_pages = %u\n", max_pages);
+    printf("XIP_BASE = %8x\n", XIP_BASE);
+    printf("XIP_BASE = %u\n", XIP_BASE);
+    printf("FLASH_TARGET_OFFSET = %8x\n", FLASH_TARGET_OFFSET);
+    printf("FLASH_TARGET_OFFSET = %u\n", FLASH_TARGET_OFFSET);
+    printf("FLASH_PAGE_SIZE = %8x\n", FLASH_PAGE_SIZE);
+    printf("FLASH_PAGE_SIZE = %u\n", FLASH_PAGE_SIZE);
+    printf("PICO_FLASH_SIZE_BYTES = %8x\n", PICO_FLASH_SIZE_BYTES);
+    printf("PICO_FLASH_SIZE_BYTES = %u\n", PICO_FLASH_SIZE_BYTES);
+    printf("FLASH_TARGET_OFFSET / FLASH_PAGE_SIZE = %u\n", (FLASH_TARGET_OFFSET/FLASH_PAGE_SIZE));
+    printf("PICO_FLASH_SIZE_BYTES / FLASH_PAGE_SIZE = %u\n", (PICO_FLASH_SIZE_BYTES/FLASH_PAGE_SIZE));
+    printf("(PICO_FLASH_SIZE_BYTES - start) / FLASH_PAGE_SIZE = %u\n", ((PICO_FLASH_SIZE_BYTES - (XIP_BASE + FLASH_TARGET_OFFSET))/FLASH_PAGE_SIZE));
 
 
     // *************************
@@ -160,11 +165,13 @@ int main() {
     printf("COMPASS initialized \n");
 
     // ---GPS PA1010D
-    char init_command[] = "$PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n";
     hw_write_masked(&i2c1->hw->sda_hold, 5, I2C_IC_SDA_HOLD_IC_SDA_TX_HOLD_BITS);
     // Make the I2C pins available to picotool
     bi_decl(bi_2pins_with_func(config::kI2C_0_sda_pin, config::kI2C_0_scl_pin, GPIO_FUNC_I2C));
     GPS gps;
+
+    // ---Storage
+    Storage storage;
 
     // ---timer
     struct repeating_timer timer_1;
@@ -219,7 +226,7 @@ int main() {
         switch (current_state)
         {
         case StateId::kInit:            
-            storage::RestoreSavedPagesCounter();
+            storage.RestoreSavedPagesCounter();
             sleep_ms(1000);
             current_state = StateId::kStandby;
             ui::GoToScreen(StateId::kStandby);
@@ -276,7 +283,7 @@ int main() {
             }
             if(btn2_pressed)
             {
-                storage::StartNewTraining();
+                storage.StartNewTraining();
                 current_state = StateId::kTraining;
                 ui::GoToScreen(StateId::kTraining);
                 // ui::GoToScreen(&display, StateId::kTraining);
@@ -317,7 +324,7 @@ int main() {
                     distance::CalculateDistance(sensors_data);
                 }
                 // ---write data to FLASH
-                int success = storage::UpdateDataToStore(sensors_data, gps_data);
+                int success = storage.UpdateDataToStore(sensors_data, gps_data);
                 printf("MAIN::training: UpdateDataToStore result = %i \n", success);
 
                 ui::UpdateTraining(sensors_data.distance, error_msg);
@@ -375,7 +382,7 @@ int main() {
             break;
         case StateId::kReadingInProgress:
             // Starts reading data and sending via UART to PC
-            storage::ReadAllData();
+            storage.ReadAllData();
             sleep_ms(3);
 
             current_state = StateId::kStandby;
@@ -400,7 +407,7 @@ int main() {
             break;
         case StateId::kErasingInProgress:
             // Starts erasing data - actually erases first sector (16*256 bytes) and set saved_pages_counter=0
-            storage::EraseData();
+            storage.EraseData();
             sleep_ms(3000);
 
             current_state = StateId::kStandby;
