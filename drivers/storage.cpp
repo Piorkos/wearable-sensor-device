@@ -5,24 +5,21 @@
 Storage::Storage() : saved_pages_counter{0}, trainings_counter{0}
 {
     printf("Storage Constructor \n");
-    printf("Storage flash_target_contents = %x8 \n", flash_target_contents);
-    printf("Storage flash_target_contents = %u \n", flash_target_contents);
-    printf("Storage flash_target_contents = %u \n", max_pages);
-    
+    printf("Storage flash_storage_start = %x8 \n", flash_storage_start);
+    printf("Storage flash_storage_start_offset = %x8 \n", flash_storage_start_offset);
+    printf("Storage max_pages = %u \n", max_pages);
+
+    RestoreSavedPagesCounter();
+
 }
 
-Storage::~Storage(){}
-
-void Storage::StartNewTraining()
+Storage::~Storage()
 {
-    ++trainings_counter;
-    data_to_store += "$" + std::to_string(trainings_counter);
-    // TODO save trainings_counter in FLASH memory
 }
 
-int Storage::GetTrainingsCounter()
+void Storage::AddNewTrainingMark()
 {
-    return trainings_counter;
+    data_to_store += "$";
 }
 
 /**
@@ -38,7 +35,7 @@ int Storage::RestoreSavedPagesCounter()
 
     for (int i = 0; i < max_pages; ++i) 
     {
-        if(flash_target_contents[(i*FLASH_PAGE_SIZE)] == 0xFF)
+        if(flash_storage_start[(i*FLASH_PAGE_SIZE)] == 0xFF)
         {
             saved_pages_counter = i;
             printf("storage::RestoreSavedPagesCounter RESTORED saved_pages_counter = %i \n", saved_pages_counter);
@@ -48,21 +45,10 @@ int Storage::RestoreSavedPagesCounter()
     return -1;
 }
 
-void Storage::PrintBuf(const uint8_t *buf, size_t len) 
-{
-    for (size_t i = 0; i < len; ++i) {
-        printf("%02x", buf[i]);
-        if (i % 16 == 15)
-            printf("\n");
-        else
-            printf(" ");
-    }
-}
-
 /**
  * @brief Saves data on next empty page in FLASH memory. Page is the size of 256 bytes.
  * 
- * @param data_to_save 
+ * @param data_to_save  max 256 bytes
  * @return true if saving succesful
  * @return false if the memory is full
  */
@@ -71,7 +57,7 @@ bool Storage::SaveStringInFlash(std::string data_to_save)
     printf("storage::SaveStringInFlash saved_pages_counter = %i \n", saved_pages_counter);
     if(saved_pages_counter < max_pages)
     {
-        uint32_t offset{(FLASH_TARGET_OFFSET + (saved_pages_counter + 16)*FLASH_PAGE_SIZE)};
+        uint32_t offset{(flash_storage_start_offset + (saved_pages_counter + 16)*FLASH_PAGE_SIZE)};
         uint32_t ints{};
 
         // erase memory of next page
@@ -83,7 +69,7 @@ bool Storage::SaveStringInFlash(std::string data_to_save)
             restore_interrupts(ints);
         }
 
-        offset = (FLASH_TARGET_OFFSET + saved_pages_counter*FLASH_PAGE_SIZE);
+        offset = (flash_storage_start_offset + saved_pages_counter*FLASH_PAGE_SIZE);
 
         // For writing data first time, erase memory of current (i.e. = 0) page
         if(saved_pages_counter == 0)
@@ -169,6 +155,17 @@ int Storage::UpdateDataToStore(SensorsData& sensors_data, bool include_gps)
     return 2;
 }
 
+void Storage::PrintBuf(const uint8_t *buf, size_t len) 
+{
+    for (size_t i = 0; i < len; ++i) {
+        printf("%02x", buf[i]);
+        if (i % 16 == 15)
+            printf("\n");
+        else
+            printf(" ");
+    }
+}
+
 /**
  * @brief Reads and prints page of data (256 bytes) from the memory.
  * 
@@ -178,7 +175,7 @@ void Storage::ReadDataFromFlash(const int page_id)
 {
     if(page_id < saved_pages_counter)
     {
-        PrintBuf((flash_target_contents+page_id*FLASH_PAGE_SIZE), FLASH_PAGE_SIZE);
+        PrintBuf((flash_storage_start+page_id*FLASH_PAGE_SIZE), FLASH_PAGE_SIZE);
     }
     else
     {
@@ -209,7 +206,7 @@ void Storage::EraseData()
     
     uint32_t ints{};
     ints = save_and_disable_interrupts();
-    flash_range_erase(FLASH_TARGET_OFFSET, 3*FLASH_SECTOR_SIZE);
+    flash_range_erase(flash_storage_start_offset, 3*FLASH_SECTOR_SIZE);
     restore_interrupts(ints);
 
     saved_pages_counter = 0;
@@ -224,19 +221,20 @@ void Storage::FullEraseData()
     printf("storage::FullEraseData 1.0 \n");
 
     int max_sectors = max_pages/16;
-    uint32_t offset{FLASH_TARGET_OFFSET};
+    uint32_t offset{flash_storage_start_offset};
     
     uint32_t ints{};
+    uint8_t factor{20};
 
 
-    for (int i = 24; i < max_sectors; ++i) 
+    for (int i = 1; i < max_sectors; (i + factor)) 
     {
         printf("storage::FullEraseData - sector = %i \n", i);
         ints = save_and_disable_interrupts();
-        flash_range_erase(offset, i*FLASH_SECTOR_SIZE);
+        flash_range_erase(offset, factor*FLASH_SECTOR_SIZE);
         restore_interrupts(ints);
 
-        offset = (FLASH_TARGET_OFFSET + i*FLASH_SECTOR_SIZE);
+        offset = (flash_storage_start_offset + i*FLASH_SECTOR_SIZE);
     }
     
 

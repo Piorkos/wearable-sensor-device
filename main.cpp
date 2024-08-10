@@ -22,7 +22,6 @@
 #include "utils/sensors_data.h" // Struct to hold data from sensors
 
 
-
 // *************************
 // ---Uncomment below line to switch to TEST mode. 
 // #define I2C_CONNECTION_TEST
@@ -74,36 +73,10 @@ int main() {
     }
 
     #ifdef ARDUINO_NANO_RP2040
-        printf("- ARDUINO : v1.4 \n");
+        printf("- ARDUINO : v1.5 \n");
     #else
         printf("- Pi Pico \n");
     #endif
-
-
-    // ---Flash information 
-    extern char __flash_binary_end;
-    uintptr_t end = (uintptr_t) &__flash_binary_end;
-    /* At runtime, you can determine the end of the program in flash from 
-        the intrinsic variable __flash_binary_end (which is a memory address, not an offset in flash). 
-        There's no particular reason to think that this position will align on a 4kB boundary so, 
-        if you wanted to use it to locate the start of the writeable area of flash, you'd have to round it up.
-    */
-    printf("main: End of the program in flash %8x\n", end);
-    printf("main: End of the program in flash %u\n", end);
-    // printf("flash_target_contents %8x\n", flash_target_contents);
-    // printf("flash_target_contents %u\n", flash_target_contents);
-    // printf("max_pages = %u\n", max_pages);
-    printf("XIP_BASE = %8x\n", XIP_BASE);
-    printf("XIP_BASE = %u\n", XIP_BASE);
-    printf("FLASH_TARGET_OFFSET = %8x\n", FLASH_TARGET_OFFSET);
-    printf("FLASH_TARGET_OFFSET = %u\n", FLASH_TARGET_OFFSET);
-    printf("FLASH_PAGE_SIZE = %8x\n", FLASH_PAGE_SIZE);
-    printf("FLASH_PAGE_SIZE = %u\n", FLASH_PAGE_SIZE);
-    printf("PICO_FLASH_SIZE_BYTES = %8x\n", PICO_FLASH_SIZE_BYTES);
-    printf("PICO_FLASH_SIZE_BYTES = %u\n", PICO_FLASH_SIZE_BYTES);
-    printf("FLASH_TARGET_OFFSET / FLASH_PAGE_SIZE = %u\n", (FLASH_TARGET_OFFSET/FLASH_PAGE_SIZE));
-    printf("PICO_FLASH_SIZE_BYTES / FLASH_PAGE_SIZE = %u\n", (PICO_FLASH_SIZE_BYTES/FLASH_PAGE_SIZE));
-    printf("(PICO_FLASH_SIZE_BYTES - start) / FLASH_PAGE_SIZE = %u\n", ((PICO_FLASH_SIZE_BYTES - (XIP_BASE + FLASH_TARGET_OFFSET))/FLASH_PAGE_SIZE));
 
 
     // *************************
@@ -225,8 +198,7 @@ int main() {
 
         switch (current_state)
         {
-        case StateId::kInit:            
-            storage.RestoreSavedPagesCounter();
+        case StateId::kInit:
             sleep_ms(1000);
             current_state = StateId::kStandby;
             ui::GoToScreen(StateId::kStandby);
@@ -283,7 +255,7 @@ int main() {
             }
             if(btn2_pressed)
             {
-                storage.StartNewTraining();
+                storage.AddNewTrainingMark();
                 current_state = StateId::kTraining;
                 ui::GoToScreen(StateId::kTraining);
                 // ui::GoToScreen(&display, StateId::kTraining);
