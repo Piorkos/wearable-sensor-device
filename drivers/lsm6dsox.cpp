@@ -1,25 +1,11 @@
 #include "lsm6dsox.h"
 
-#define LSM6DSOX_ADDRESS            0x6A
-
-#define LSM6DSOX_WHO_AM_I           0X0F
-#define LSM6DSOX_CTRL1_XL           0X10        // Accelerometer control register 1
-#define LSM6DSOX_CTRL2_G            0X11        // Gyroscope control register 2
-#define LSM6DSOX_STATUS_REG         0X1E        // Contain information if new data is available
-// #define LSM6DSOX_CTRL6_C            0X15     // Accelerometer power mode
-#define LSM6DSOX_CTRL7_G            0X16        // Control register 7
-#define LSM6DSOX_CTRL8_XL           0X17        // Control register 8
-
-#define LSM6DSOX_OUT_TEMP_L         0X20        // termometer data
-#define LSM6DSOX_OUTX_L_G           0X22        // gyro data
-#define LSM6DSOX_OUTX_L_A           0X28        // accelerometer data
 
 Imu::Imu(i2c_inst_t *i2c):i2c_{i2c}
 {
-}
+    printf("Imu Constructor \n");
 
-void Imu::Begin()
-{
+
     uint8_t buffer[1];
     uint8_t reg{LSM6DSOX_WHO_AM_I};
 
@@ -60,6 +46,16 @@ void Imu::Begin()
     i2c_write_blocking(i2c_, LSM6DSOX_ADDRESS, buf, 2, false);
 }
 
+Imu::~Imu()
+{
+    printf("Imu Destructor \n");
+}
+
+/**
+ * TODO: at the moment this is not used and I don't remember why. Try to understand it, because probably it should be used.
+ * @brief 
+ * 
+ */
 void Imu::End()
 {
     uint8_t buf[] = {LSM6DSOX_CTRL2_G, 0x00};

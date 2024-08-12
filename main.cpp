@@ -15,7 +15,7 @@
 #include "drivers/storage.h"            // onboard Flesh memory
 #include "drivers/pa1010d.h"            // GPS
 #include "drivers/sharp_mip/write.h"    // Sharp MIP
-#include "lsm6dsox/lsm6dsox.h"  // onboard's gyro, accel
+#include "drivers/lsm6dsox.h"  // onboard's gyro, accel
 #include "utils/distance.h"
 #include "utils/ui.h"           // controls UI
 #include "utils/data.h"         // pins, parameters,...
@@ -129,7 +129,6 @@ int main() {
 
     // ---IMU LSM6DSOX
     Imu imu{i2c0};
-    imu.Begin();
     printf("IMU initialized \n");
 
     // --- COMPASS LSM303D
