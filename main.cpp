@@ -14,7 +14,9 @@
 #include "drivers/lsm303d.h"            // compass
 #include "drivers/storage.h"            // onboard Flesh memory
 #include "drivers/pa1010d.h"            // GPS
-#include "drivers/sharp_mip/write.h"    // Sharp MIP
+#include "drivers/display/write.h"    // Sharp MIP
+#include "drivers/display/display.h"    // Sharp MIP
+#include "drivers/display/sharp_mip_display.h"    // Sharp MIP
 #include "drivers/lsm6dsox.h"  // onboard's gyro, accel
 #include "utils/distance.h"
 #include "utils/ui.h"           // controls UI
@@ -113,6 +115,9 @@ int main() {
     sleep_ms(1000);
     sharp_mip::ClearScreen();
     sleep_ms(1000);
+
+
+    // Display* display = new SharpMipDisplay(config::kWidth, config::kHeight, spi1, config::kSPI_cs_pin);
     
 
     StateId current_state{StateId::kInit};

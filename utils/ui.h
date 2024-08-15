@@ -4,7 +4,9 @@
 #include "hardware/gpio.h"
 #include "data.h"
 
-#include "../drivers/sharp_mip/write.h"    // Sharp MIP
+// #include "../drivers/display/write.h"    // Sharp MIP
+#include "../drivers/display/display.h"             // Sharp MIP
+#include "../drivers/display/sharp_mip_display.h"   // Sharp MIP
 
 
 void ButtonCallback(uint gpio, uint32_t events);
@@ -24,6 +26,7 @@ namespace ui
     uint8_t minutes{0};
     uint8_t hours{0};
     int run_distance{0};       // distance for full trainig
+    Display* display = new SharpMipDisplay(config::kWidth, config::kHeight, spi1, config::kSPI_cs_pin);
 
     
     void InitButtons();
@@ -31,10 +34,10 @@ namespace ui
     void UpdateSide(std::string side_text_0, std::string side_text_1);
     void GoToScreen(StateId screen_id, std::string msg_0 = "", std::string msg_1 = "", std::string msg_2 = "");
     void UpdateTraining(int distance, std::string error_msg);
-    // OLED
-    void UpdateSide(pico_ssd1306::SSD1306* display, std::string side_text_0, std::string side_text_1);
-    void GoToScreen(pico_ssd1306::SSD1306* display, StateId screen_id, std::string msg_0 = "", std::string msg_1 = "", std::string msg_2 = "");
-    void UpdateTraining(pico_ssd1306::SSD1306* display, int distance, std::string error_msg);
+    // // OLED
+    // void UpdateSide(pico_ssd1306::SSD1306* display, std::string side_text_0, std::string side_text_1);
+    // void GoToScreen(pico_ssd1306::SSD1306* display, StateId screen_id, std::string msg_0 = "", std::string msg_1 = "", std::string msg_2 = "");
+    // void UpdateTraining(pico_ssd1306::SSD1306* display, int distance, std::string error_msg);
     // Common for both types of display
     void UpdateButtons(bool left, bool right);
     int64_t EnableButtons(alarm_id_t id, void *user_data);
@@ -58,92 +61,92 @@ namespace ui
     void GoToScreen(StateId screen_id, std::string msg_0, std::string msg_1, std::string msg_2)
     {
         printf("UI::GoToScreen %s \n", state_id_names[screen_id].c_str());
-        sharp_mip::ClearScreen();
+        display->ClearScreen();
         switch (screen_id)
         {
         case kInit:
             UpdateButtons(false, false);
-            sharp_mip::WriteLine(0, 20, "INIT:::");
-            sharp_mip::RefreshScreen(0, 36);
+            display->DrawLineOfText(0, 20, "INIT:::");
+            display->RefreshScreen(0, 36);
             break;
         case kStandby:
             ResetTraining();
             UpdateButtons(true, true);
-            sharp_mip::WriteLine(0, 20, "START");
-            sharp_mip::WriteLine(0, 40, "TRACKING?");
+            display->DrawLineOfText(0, 20, "START");
+            display->DrawLineOfText(0, 40, "TRACKING?");
             UpdateSide("OPT", "YES");
-            sharp_mip::RefreshScreen(20, 160);
+            display->RefreshScreen(20, 160);
             break;
         case kGpsSearch:
             UpdateButtons(false, true);
-            sharp_mip::WriteLine(0, 20, "GPS");
-            sharp_mip::WriteLine(0, 40, "SEARCHING");
+            display->DrawLineOfText(0, 20, "GPS");
+            display->DrawLineOfText(0, 40, "SEARCHING");
             UpdateSide("", "CNL");
-            sharp_mip::RefreshScreen(0, 160);
+            display->RefreshScreen(0, 160);
             break;
         case kGpsReady:
             UpdateButtons(true, true);
-            sharp_mip::WriteLine(0, 20, "GPS");
-            sharp_mip::WriteLine(0, 40, "READY");
+            display->DrawLineOfText(0, 20, "GPS");
+            display->DrawLineOfText(0, 40, "READY");
             UpdateSide("CNL", "GO");
-            sharp_mip::RefreshScreen(0, 160);
+            display->RefreshScreen(0, 160);
             break;
         case kTraining:
             UpdateButtons(false, true);            
-            sharp_mip::WriteLine(0, 20, ".");
-            sharp_mip::WriteLine(0, 40, "TIME: ");
+            display->DrawLineOfText(0, 20, ".");
+            display->DrawLineOfText(0, 40, "TIME: ");
             UpdateSide("", "END");
-            sharp_mip::RefreshScreen(0, 160);
+            display->RefreshScreen(0, 160);
             break;
         case kStopTraining:
             UpdateButtons(true, true);            
-            sharp_mip::WriteLine(0, 20, "END");
-            sharp_mip::WriteLine(0, 40, "TRACKING?");
+            display->DrawLineOfText(0, 20, "END");
+            display->DrawLineOfText(0, 40, "TRACKING?");
             UpdateSide("NO", "YES");
-            sharp_mip::RefreshScreen(0, 160);
+            display->RefreshScreen(0, 160);
             break;
         case kReadData:
             UpdateButtons(true, true);            
-            sharp_mip::WriteLine(0, 20, "READ");
-            sharp_mip::WriteLine(0, 40, "DATA?");
+            display->DrawLineOfText(0, 20, "READ");
+            display->DrawLineOfText(0, 40, "DATA?");
             UpdateSide("NO", "YES");
-            sharp_mip::RefreshScreen(0, 160);
+            display->RefreshScreen(0, 160);
             break;
         case kReadingInProgress:
             UpdateButtons(false, false);            
-            sharp_mip::WriteLine(0, 20, "READING");
-            sharp_mip::WriteLine(0, 40, ":::");
+            display->DrawLineOfText(0, 20, "READING");
+            display->DrawLineOfText(0, 40, ":::");
             UpdateSide("", "");
-            sharp_mip::RefreshScreen(0, 160);
+            display->RefreshScreen(0, 160);
             break;
         case kEraseData:
             UpdateButtons(true, true);            
-            sharp_mip::WriteLine(0, 20, "ERASE");
-            sharp_mip::WriteLine(0, 40, "DATA?");
+            display->DrawLineOfText(0, 20, "ERASE");
+            display->DrawLineOfText(0, 40, "DATA?");
             UpdateSide("NO", "YES");
-            sharp_mip::RefreshScreen(0, 160);
+            display->RefreshScreen(0, 160);
             break;
         case kErasingInProgress:
             UpdateButtons(false, false);            
-            sharp_mip::WriteLine(0, 20, "ERASING");
-            sharp_mip::WriteLine(0, 40, ":::");
+            display->DrawLineOfText(0, 20, "ERASING");
+            display->DrawLineOfText(0, 40, ":::");
             UpdateSide("", "");
-            sharp_mip::RefreshScreen(0, 160);
+            display->RefreshScreen(0, 160);
             break;
         case kReturn:
             UpdateButtons(true, true);            
-            sharp_mip::WriteLine(0, 20, "HOME");
-            sharp_mip::WriteLine(0, 40, "SCREEN?");
+            display->DrawLineOfText(0, 20, "HOME");
+            display->DrawLineOfText(0, 40, "SCREEN?");
             UpdateSide("NO", "YES");
-            sharp_mip::RefreshScreen(0, 160);
+            display->RefreshScreen(0, 160);
             break;
         case kError:
             UpdateButtons(false, false);            
-            sharp_mip::WriteLine(0, 0, msg_0);
-            sharp_mip::WriteLine(0, 40, msg_1);
-            sharp_mip::WriteLine(0, 60, msg_2);
+            display->DrawLineOfText(0, 0, msg_0);
+            display->DrawLineOfText(0, 40, msg_1);
+            display->DrawLineOfText(0, 60, msg_2);
             UpdateSide("", "");
-            sharp_mip::RefreshScreen(0, 160);
+            display->RefreshScreen(0, 160);
             break;
         
         default:
@@ -211,28 +214,28 @@ namespace ui
         run_distance += distance;
         std::string distance_s{std::to_string(run_distance) + " m"};
 
-        sharp_mip::ClearScreen();
+        display->ClearScreen();
         if(error_msg != "")
         {
             std::string error_sentance = "E";
             error_sentance.append(error_msg);
-            sharp_mip::WriteLine(0, 20, error_sentance);
-            sharp_mip::WriteLine(0, 40, time);
+            display->DrawLineOfText(0, 20, error_sentance);
+            display->DrawLineOfText(0, 40, time);
         }
         else
         {
-            sharp_mip::WriteLine(0, 40, time);
+            display->DrawLineOfText(0, 40, time);
         }
 
         UpdateSide("", "END");
-        sharp_mip::RefreshScreen(40, 56);
+        display->RefreshScreen(40, 56);
     }
 
     void UpdateSide(std::string side_text_0, std::string side_text_1)
     {
         printf("ui:UpdateSide: %s, %s \n", side_text_0.c_str(), side_text_1.c_str());
-        sharp_mip::WriteLine(0, 140, side_text_0);
-        sharp_mip::WriteLine(10, 140, side_text_1);
+        display->DrawLineOfText(0, 140, side_text_0);
+        display->DrawLineOfText(10, 140, side_text_1);
     }
 
 

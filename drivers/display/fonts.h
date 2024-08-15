@@ -5,6 +5,8 @@
 
 const uint8_t kFont_12_16[] = {
     
+    // ---FONT WIDTH x HEIGTH---
+    0x0C,       0x1,
     // ---NUMBERS---
     0b11111000, 0b00000001,
     0b11111011, 0b11111101,

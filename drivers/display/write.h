@@ -30,10 +30,10 @@ namespace sharp_mip
 {
     bool vcom_bool_{false};
 
-    uint8_t screen_cols = config::kWidth / 8;
-    uint8_t* screen_state = new uint8_t[screen_cols * config::kHeight]{};
+    uint8_t kScreenWidthInWords_ = config::kWidth / 8;
+    uint8_t* screen_buffer_ = new uint8_t[kScreenWidthInWords_ * config::kHeight]{};
 
-    // uint16_t* screen_state = new uint16_t[40 * 30]{};
+    // uint16_t* screen_buffer_ = new uint16_t[40 * 30]{};
 
     /**
      * @brief Updates screen buffer (array) with given text. The text is put in the screen buffer at given position.
@@ -46,8 +46,8 @@ namespace sharp_mip
     {
         printf("--sharp_mip::WriteLine : new_string = %s \n", new_string.c_str());
 
-        // TODO x jest wyrazony w pixelach, natomiast screen_state uzywa byte (8 pixeli) jako jednostke bazowa
-        // Uwzglednic to, gdy wartosc z kFont_12_16 jest przypisywana do screen_state
+        // TODO x jest wyrazony w pixelach, natomiast screen_buffer_ uzywa byte (8 pixeli) jako jednostke bazowa
+        // Uwzglednic to, gdy wartosc z kFont_12_16 jest przypisywana do screen_buffer_
         
 
 
@@ -57,7 +57,7 @@ namespace sharp_mip
         // Clear lines
         for(int i = y; i < (y + font_height_in_bits); ++i) 
         {
-            sharp_mip::screen_state[i] = 0b11111111;
+            sharp_mip::screen_buffer_[i] = 0b11111111;
         }
 
         char first_char_in_fonts = '0';
@@ -69,16 +69,16 @@ namespace sharp_mip
             {
                 for (uint8_t j = 0; j < font_width_in_bytes; j++)
                 {
-                    int pixel_index{(y + i) * screen_cols + x + char_counter*font_width_in_bytes};
+                    int pixel_index{(y + i) * kScreenWidthInWords_ + x + char_counter*font_width_in_bytes};
                     int font_index{((character - first_char_in_fonts) * font_height_in_bits + i)*font_width_in_bytes};
                     
-                    screen_state[pixel_index + j]= kFont_12_16[font_index + j];
+                    screen_buffer_[pixel_index + j]= kFont_12_16[font_index + j];
                 }
             }
             ++char_counter;
         }
 
-        // PrintBinaryArray(screen_state, screen_cols, config::kHeight);
+        // PrintBinaryArray(screen_buffer_, kScreenWidthInWords_, config::kHeight);
     }
 
     /**
@@ -93,7 +93,7 @@ namespace sharp_mip
         
         gpio_put(config::kSPI_cs_pin, 1);
 
-        int length_of_buffer = 1 + (line_end - line_start) * (1 + screen_cols + 1) + 1;
+        int length_of_buffer = 1 + (line_end - line_start) * (1 + kScreenWidthInWords_ + 1) + 1;
         uint8_t buf[length_of_buffer];
         int buf_iterator{0};
         // buf[buf_iterator] = 0b10000000;    // command
@@ -114,9 +114,9 @@ namespace sharp_mip
             uint8_t little_endian_line_address = SwapBigToLittleEndian(i);
             buf[buf_iterator] = little_endian_line_address;    //line address
             buf_iterator++;
-            for (size_t j = 0; j < screen_cols; ++j)
+            for (size_t j = 0; j < kScreenWidthInWords_; ++j)
             {
-                buf[buf_iterator] = screen_state[i * screen_cols + j];
+                buf[buf_iterator] = screen_buffer_[i * kScreenWidthInWords_ + j];
                 buf_iterator++;
             }
             buf[buf_iterator] = 0b00000000;     //end line trailer
@@ -137,9 +137,9 @@ namespace sharp_mip
     {
         printf("---ClearScreen \n");
 
-        for(int i = 0; i < (sharp_mip::screen_cols * config::kHeight); ++i) 
+        for(int i = 0; i < (sharp_mip::kScreenWidthInWords_ * config::kHeight); ++i) 
         {
-            sharp_mip::screen_state[i] = 0b11111111;
+            sharp_mip::screen_buffer_[i] = 0b11111111;
         }
 
         gpio_put(config::kSPI_cs_pin, 1);

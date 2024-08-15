@@ -22,8 +22,10 @@ example_auto_set_url(halikOS)
 
 add_subdirectory(pico-ssd1306)
 add_subdirectory(drivers)
+add_subdirectory(drivers/display)
 target_link_libraries(halikOS
   pico_ssd1306
   drivers
+  display
   hardware_spi
   hardware_i2c)
