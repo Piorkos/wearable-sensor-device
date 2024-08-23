@@ -7,6 +7,8 @@
 // #include "../drivers/display/write.h"    // Sharp MIP
 #include "../drivers/display/display.h"             // Sharp MIP
 #include "../drivers/display/sharp_mip_display.h"   // Sharp MIP
+#include "../drivers/display/font_12x16.h"   // Sharp MIP
+#include "../drivers/display/font_16x20.h"   // Sharp MIP
 
 
 void ButtonCallback(uint gpio, uint32_t events);
@@ -26,11 +28,15 @@ namespace ui
     uint8_t minutes{0};
     uint8_t hours{0};
     int run_distance{0};       // distance for full trainig
-    Display* display = new SharpMipDisplay(config::kWidth, config::kHeight, spi1, config::kSPI_cs_pin);
+    SharpMipDisplay* display = new SharpMipDisplay(config::kWidth, config::kHeight, spi1, config::kSPI_cs_pin);
+    // sleep_ms(1000);
+    // display->ClearScreen();
+
 
     
     void InitButtons();
     // Sharp MIP
+    void InitDisplay();
     void UpdateSide(std::string side_text_0, std::string side_text_1);
     void GoToScreen(StateId screen_id, std::string msg_0 = "", std::string msg_1 = "", std::string msg_2 = "");
     void UpdateTraining(int distance, std::string error_msg);
@@ -55,6 +61,11 @@ namespace ui
         gpio_pull_up(config::kButton_right_pin);
     }
 
+    void InitDisplay()
+    {
+        sleep_ms(1000);
+        display->ClearScreen();
+    }
 
     // -- Sharp MIP
 
@@ -66,85 +77,85 @@ namespace ui
         {
         case kInit:
             UpdateButtons(false, false);
-            display->DrawLineOfText(0, 20, "INIT:::");
-            display->RefreshScreen(0, 36);
+            display->DrawLineOfText(0, 20, "INIT:::", kFont_16_20);
+            display->RefreshScreen(0, 40);
             break;
         case kStandby:
             ResetTraining();
             UpdateButtons(true, true);
-            display->DrawLineOfText(0, 20, "START");
-            display->DrawLineOfText(0, 40, "TRACKING?");
+            display->DrawLineOfText(0, 20, "START", kFont_12_16);
+            display->DrawLineOfText(0, 40, "TRACKING?", kFont_12_16);
             UpdateSide("OPT", "YES");
             display->RefreshScreen(20, 160);
             break;
         case kGpsSearch:
             UpdateButtons(false, true);
-            display->DrawLineOfText(0, 20, "GPS");
-            display->DrawLineOfText(0, 40, "SEARCHING");
+            display->DrawLineOfText(0, 20, "GPS", kFont_12_16);
+            display->DrawLineOfText(0, 40, "SEARCHING", kFont_12_16);
             UpdateSide("", "CNL");
             display->RefreshScreen(0, 160);
             break;
         case kGpsReady:
             UpdateButtons(true, true);
-            display->DrawLineOfText(0, 20, "GPS");
-            display->DrawLineOfText(0, 40, "READY");
+            display->DrawLineOfText(0, 20, "GPS", kFont_12_16);
+            display->DrawLineOfText(0, 40, "READY", kFont_12_16);
             UpdateSide("CNL", "GO");
             display->RefreshScreen(0, 160);
             break;
         case kTraining:
             UpdateButtons(false, true);            
-            display->DrawLineOfText(0, 20, ".");
-            display->DrawLineOfText(0, 40, "TIME: ");
+            display->DrawLineOfText(0, 20, ".", kFont_12_16);
+            display->DrawLineOfText(0, 40, "TIME: ", kFont_16_20);
             UpdateSide("", "END");
             display->RefreshScreen(0, 160);
             break;
         case kStopTraining:
             UpdateButtons(true, true);            
-            display->DrawLineOfText(0, 20, "END");
-            display->DrawLineOfText(0, 40, "TRACKING?");
+            display->DrawLineOfText(0, 20, "END", kFont_12_16);
+            display->DrawLineOfText(0, 40, "TRACKING?", kFont_12_16);
             UpdateSide("NO", "YES");
             display->RefreshScreen(0, 160);
             break;
         case kReadData:
             UpdateButtons(true, true);            
-            display->DrawLineOfText(0, 20, "READ");
-            display->DrawLineOfText(0, 40, "DATA?");
+            display->DrawLineOfText(0, 20, "READ", kFont_12_16);
+            display->DrawLineOfText(0, 40, "DATA?", kFont_12_16);
             UpdateSide("NO", "YES");
             display->RefreshScreen(0, 160);
             break;
         case kReadingInProgress:
             UpdateButtons(false, false);            
-            display->DrawLineOfText(0, 20, "READING");
-            display->DrawLineOfText(0, 40, ":::");
+            display->DrawLineOfText(0, 20, "READING", kFont_12_16);
+            display->DrawLineOfText(0, 40, ":::", kFont_12_16);
             UpdateSide("", "");
             display->RefreshScreen(0, 160);
             break;
         case kEraseData:
             UpdateButtons(true, true);            
-            display->DrawLineOfText(0, 20, "ERASE");
-            display->DrawLineOfText(0, 40, "DATA?");
+            display->DrawLineOfText(0, 20, "ERASE", kFont_12_16);
+            display->DrawLineOfText(0, 40, "DATA?", kFont_12_16);
             UpdateSide("NO", "YES");
             display->RefreshScreen(0, 160);
             break;
         case kErasingInProgress:
             UpdateButtons(false, false);            
-            display->DrawLineOfText(0, 20, "ERASING");
-            display->DrawLineOfText(0, 40, ":::");
+            display->DrawLineOfText(0, 20, "ERASING", kFont_12_16);
+            display->DrawLineOfText(0, 40, ":::", kFont_12_16);
             UpdateSide("", "");
             display->RefreshScreen(0, 160);
             break;
         case kReturn:
             UpdateButtons(true, true);            
-            display->DrawLineOfText(0, 20, "HOME");
-            display->DrawLineOfText(0, 40, "SCREEN?");
+            display->DrawLineOfText(0, 20, "HOME", kFont_12_16);
+            display->DrawLineOfText(0, 40, "SCREEN?", kFont_12_16);
             UpdateSide("NO", "YES");
             display->RefreshScreen(0, 160);
             break;
         case kError:
             UpdateButtons(false, false);            
-            display->DrawLineOfText(0, 0, msg_0);
-            display->DrawLineOfText(0, 40, msg_1);
-            display->DrawLineOfText(0, 60, msg_2);
+            display->DrawLineOfText(0, 0, msg_0, kFont_12_16);
+            display->DrawLineOfText(0, 40, msg_1, kFont_12_16);
+            display->DrawLineOfText(0, 60, msg_2, kFont_12_16);
             UpdateSide("", "");
             display->RefreshScreen(0, 160);
             break;
@@ -219,12 +230,12 @@ namespace ui
         {
             std::string error_sentance = "E";
             error_sentance.append(error_msg);
-            display->DrawLineOfText(0, 20, error_sentance);
-            display->DrawLineOfText(0, 40, time);
+            display->DrawLineOfText(0, 20, error_sentance, kFont_12_16);
+            display->DrawLineOfText(0, 40, time, kFont_12_16);
         }
         else
         {
-            display->DrawLineOfText(0, 40, time);
+            display->DrawLineOfText(0, 40, time, kFont_12_16);
         }
 
         UpdateSide("", "END");
@@ -234,8 +245,8 @@ namespace ui
     void UpdateSide(std::string side_text_0, std::string side_text_1)
     {
         printf("ui:UpdateSide: %s, %s \n", side_text_0.c_str(), side_text_1.c_str());
-        display->DrawLineOfText(0, 140, side_text_0);
-        display->DrawLineOfText(10, 140, side_text_1);
+        display->DrawLineOfText(0, 140, side_text_0, kFont_12_16);
+        display->DrawLineOfText(10, 140, side_text_1, kFont_12_16);
     }
 
 
@@ -441,7 +452,7 @@ namespace ui
         gpio_set_irq_enabled_with_callback(config::kButton_right_pin, GPIO_IRQ_EDGE_FALL, false, ButtonCallback);
         buttons_state.left = left;
         buttons_state.right = right;
-        add_alarm_in_ms(1000, EnableButtons, &buttons_state, false);
+        add_alarm_in_ms(500, EnableButtons, &buttons_state, false);
     }
 
     int64_t EnableButtons(alarm_id_t id, void *buttons_state)

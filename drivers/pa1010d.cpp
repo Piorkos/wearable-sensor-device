@@ -32,7 +32,7 @@ GPS::~GPS()
 // TODO improve
 bool GPS::HasFix(SensorsData& sensors_data)
 {
-    printf("GPS::HasFix \n");
+    // printf("GPS::HasFix \n");
 
     if(gps_fix_count < 5)  // if GPS does NOT have a fix
     {
@@ -191,17 +191,13 @@ void GPS::ParseGNMRC(char output[], char protocol[], std::string& latitude, std:
 
 int GPS::ReadRaw(SensorsData& sensors_data) 
 {
-    printf("GPS::ReadRaw \n");
-
     memset(numcommand, 0, MAX_READ);
     uint8_t buffer[MAX_READ];
 
     int i = 0;
     bool complete = false;
 
-    printf("GPS::ReadRaw - 1 \n");
     int bytes_read = i2c_read_blocking(i2c_, ADDR, buffer, MAX_READ, false);
-    printf("GPS::ReadRaw - 2 \n");
     if(bytes_read == PICO_ERROR_GENERIC)
     {
         printf("GPS READING ERROR - NO CONNECTION \n");
@@ -218,7 +214,6 @@ int GPS::ReadRaw(SensorsData& sensors_data)
         sensors_data.utc_time = "err";
         return -1;
     }
-    printf("GPS::ReadRaw - 3 \n");
 
     // Convert bytes to characters
     while (i < bytes_read && complete == false) 

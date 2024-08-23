@@ -14,7 +14,6 @@
 #include "drivers/lsm303d.h"            // compass
 #include "drivers/storage.h"            // onboard Flesh memory
 #include "drivers/pa1010d.h"            // GPS
-#include "drivers/display/write.h"    // Sharp MIP
 #include "drivers/display/display.h"    // Sharp MIP
 #include "drivers/display/sharp_mip_display.h"    // Sharp MIP
 #include "drivers/lsm6dsox.h"  // onboard's gyro, accel
@@ -68,7 +67,7 @@ int main() {
     stdio_init_all();
 
     // ---wait for connection to CoolTerm on Mac
-    for(int i = 0; i < 3; ++i)
+    for(int i = 0; i < 6; ++i)
     {
         printf("waiting %i \n", i);
         sleep_ms(1000);
@@ -79,6 +78,21 @@ int main() {
     #else
         printf("- Pi Pico \n");
     #endif
+
+    // SPI for Sharp MIP display
+    spi_init(spi1, 2000000);
+    spi_set_format( spi1, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
+    gpio_set_function(config::kSPI_mosi_pin, GPIO_FUNC_SPI);
+    gpio_set_function(config::kSPI_sck_pin, GPIO_FUNC_SPI);
+
+    gpio_init(config::kSPI_cs_pin);
+    gpio_set_dir(config::kSPI_cs_pin, GPIO_OUT);
+    gpio_put(config::kSPI_cs_pin, 0);  // this display is low on inactive
+    sleep_ms(10);
+
+    ui::InitDisplay();
+
+
 
 
     // *************************
@@ -106,18 +120,6 @@ int main() {
     gpio_set_dir(config::kSPI_cs_pin, GPIO_OUT);
     gpio_put(config::kSPI_cs_pin, 0);  // this display is low on inactive
     sleep_ms(10);
-
-    sharp_mip::ClearScreen();
-    sleep_ms(1000);
-    sharp_mip::ToggleVCOM();
-    sleep_ms(1000);
-    sharp_mip::ToggleVCOM();
-    sleep_ms(1000);
-    sharp_mip::ClearScreen();
-    sleep_ms(1000);
-
-
-    // Display* display = new SharpMipDisplay(config::kWidth, config::kHeight, spi1, config::kSPI_cs_pin);
     
 
     StateId current_state{StateId::kInit};
@@ -411,4 +413,6 @@ int main() {
         }
 #endif
     }
+
+    return 0;
 }

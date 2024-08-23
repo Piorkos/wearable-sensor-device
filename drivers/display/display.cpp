@@ -1,6 +1,6 @@
 #include "display.h"
 
-Display::Display(uint8_t width, uint8_t height)
+Display::Display(uint16_t width, uint16_t height)
 : kScreenWidth_{width}, kScreenHeight_{height}
 {
     std::cout << "Display Contrustor" << "\n";
