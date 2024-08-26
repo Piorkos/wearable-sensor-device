@@ -2,7 +2,7 @@
 #define UI_H
 
 #include "hardware/gpio.h"
-#include "data.h"
+#include "config.h"
 
 // #include "../drivers/display/write.h"    // Sharp MIP
 #include "../drivers/display/display.h"             // Sharp MIP
@@ -29,8 +29,6 @@ namespace ui
     uint8_t hours{0};
     int run_distance{0};       // distance for full trainig
     SharpMipDisplay* display = new SharpMipDisplay(config::kWidth, config::kHeight, spi1, config::kSPI_cs_pin);
-    // sleep_ms(1000);
-    // display->ClearScreen();
 
 
     
@@ -77,7 +75,7 @@ namespace ui
         {
         case kInit:
             UpdateButtons(false, false);
-            display->DrawLineOfText(0, 20, "INIT:::", kFont_16_20);
+            display->DrawLineOfText(0, 20, "INIT:::", kFont_12_16);
             display->RefreshScreen(0, 40);
             break;
         case kStandby:
@@ -103,11 +101,12 @@ namespace ui
             display->RefreshScreen(0, 160);
             break;
         case kTraining:
-            UpdateButtons(false, true);            
-            display->DrawLineOfText(0, 20, ".", kFont_12_16);
-            display->DrawLineOfText(0, 40, "TIME: ", kFont_16_20);
-            UpdateSide("", "END");
-            display->RefreshScreen(0, 160);
+            UpdateButtons(false, true);
+            // display->ClearScreen();
+            // display->DrawLineOfText(0, 20, ".", kFont_12_16);
+            // display->DrawLineOfText(0, 40, "TIME: ", kFont_16_20);
+            // UpdateSide("", "END");
+            // display->RefreshScreen(0, 160);
             break;
         case kStopTraining:
             UpdateButtons(true, true);            
@@ -225,21 +224,22 @@ namespace ui
         run_distance += distance;
         std::string distance_s{std::to_string(run_distance) + " m"};
 
-        display->ClearScreen();
+        // display->ClearScreen();
         if(error_msg != "")
         {
             std::string error_sentance = "E";
             error_sentance.append(error_msg);
             display->DrawLineOfText(0, 20, error_sentance, kFont_12_16);
-            display->DrawLineOfText(0, 40, time, kFont_12_16);
+            display->DrawLineOfText(0, 60, time, kFont_16_20);
         }
         else
         {
-            display->DrawLineOfText(0, 40, time, kFont_12_16);
+            display->DrawLineOfText(0, 60, time, kFont_16_20);
         }
-
+        
         UpdateSide("", "END");
-        display->RefreshScreen(40, 56);
+
+        display->RefreshScreen(20, 156);
     }
 
     void UpdateSide(std::string side_text_0, std::string side_text_1)

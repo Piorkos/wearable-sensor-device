@@ -2,7 +2,7 @@
 #define LSM303D_H
 
 #include "hardware/i2c.h"
-#include "../utils/sensors_data.h"
+#include "../core/sensors_data.h"
 
 
 #define LSM303D_I2C_ADDR    0x1d

@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
-#include "../utils/sensors_data.h"
+#include "../core/sensors_data.h"
 
 
 #define LSM6DSOX_ADDRESS            0x6A

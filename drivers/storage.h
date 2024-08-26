@@ -6,7 +6,7 @@
 #include "hardware/flash.h"
 #include "pico/binary_info.h"
 
-#include "../utils/sensors_data.h"
+#include "../core/sensors_data.h"
 
 extern uint8_t __flash_binary_end;
 

@@ -4,7 +4,7 @@
 #include "hardware/i2c.h"
 #include <string>
 
-#include "../utils/sensors_data.h"
+#include "../core/sensors_data.h"
 
 #define ADDR        0x10
 #define MAX_READ    250
