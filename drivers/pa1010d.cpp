@@ -30,9 +30,11 @@ GPS::~GPS()
 }
 
 // TODO improve
-bool GPS::HasFix(SensorsData& sensors_data)
+bool GPS::HasFix()
 {
     // printf("GPS::HasFix \n");
+
+    SensorsData sensors_data;
 
     if(gps_fix_count < 5)  // if GPS does NOT have a fix
     {
@@ -41,7 +43,7 @@ bool GPS::HasFix(SensorsData& sensors_data)
         {
             printf("HasFix: gps_fix_count = %i \n", gps_fix_count);
             read_gps_flag = 0;
-            memset(numcommand, 0, MAX_READ);
+            memset(numcommand, 0, MAX_READ);    //probably not needed because it is executed in ReadTaw()
             ReadRaw(sensors_data);
 
             if(sensors_data.latitude != "zero" && sensors_data.latitude != "err")

@@ -58,7 +58,7 @@ public:
     void ReadAllData();
     
     /**
-     * @brief Erases all data, what it actually does is erasing first 3 sectors (16*256 bytes) and setting saved_pages_counter=0
+     * @brief Erases all data, what it actually does is erasing first 3 sectors (16*256 bytes) and setting saved_pages_counter_=0
      * 
      */
     void EraseData();
@@ -71,7 +71,7 @@ public:
 
 private:
     /**
-     * @brief Iterate through all pages in memory, untill it finds empty page. It updates the saved_pages_counter.
+     * @brief Iterate through all pages in memory, untill it finds empty page. It updates the saved_pages_counter_.
      * 
      * @return int position of first empty page
      */
@@ -80,13 +80,13 @@ private:
     void PrintBuf(const uint8_t *buf, size_t len);
 
 
-    const uint8_t * flash_storage_start = (const uint8_t *) &__flash_binary_end;
-    const uintptr_t flash_storage_start_offset = (uintptr_t) (&__flash_binary_end - XIP_BASE);
-    const int max_pages = (PICO_FLASH_SIZE_BYTES - flash_storage_start_offset)/FLASH_PAGE_SIZE;     // Pi Pico
+    const uint8_t * kFlashStorageStart_ = (const uint8_t *) &__flash_binary_end;
+    const uintptr_t kFlashStorageStartOffset_ = (uintptr_t) (&__flash_binary_end - XIP_BASE);
+    const int kMaxPages_ = (PICO_FLASH_SIZE_BYTES - kFlashStorageStartOffset_)/FLASH_PAGE_SIZE;     // Pi Pico
 
-    int saved_pages_counter;
-    int trainings_counter;
-    std::string data_to_store{};
+    int saved_pages_counter_;
+    int trainings_counter_;
+    std::string data_to_store_{};
 };
 
 

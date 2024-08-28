@@ -28,6 +28,6 @@ target_link_libraries(halikOS
   pico_ssd1306
   drivers
   display
-  buttons_controller
+  components
   hardware_spi
   hardware_i2c)

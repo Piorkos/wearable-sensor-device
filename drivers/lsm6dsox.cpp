@@ -1,7 +1,8 @@
 #include "lsm6dsox.h"
 
 
-Imu::Imu(i2c_inst_t *i2c):i2c_{i2c}
+Imu::Imu(i2c_inst_t *i2c)
+:i2c_{i2c}
 {
     printf("Imu Constructor \n");
 

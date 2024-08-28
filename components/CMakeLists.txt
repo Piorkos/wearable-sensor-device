@@ -1,4 +1,6 @@
-add_library(buttons_controller buttons_controller.cpp)
+add_library(components buttons_controller.cpp screen_controller.cpp tracker.cpp)
 
-target_link_libraries(buttons_controller
-    pico_stdlib)
+# add_subdirectory(../drivers)
+target_link_libraries(components
+    pico_stdlib
+    drivers)

@@ -29,11 +29,6 @@ void InitSPI()
     gpio_set_function(config::kSPI_mosi_pin, GPIO_FUNC_SPI);
     gpio_set_function(config::kSPI_sck_pin, GPIO_FUNC_SPI);
 
-    gpio_init(config::kSPI_cs_pin);
-    gpio_set_dir(config::kSPI_cs_pin, GPIO_OUT);
-    gpio_put(config::kSPI_cs_pin, 0);  // this display is low on inactive
-    sleep_ms(10);
-
     printf("SPI initialized \n");
 }
 

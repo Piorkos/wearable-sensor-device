@@ -21,7 +21,7 @@
 class Compass
 {
 public:
-    Compass();
+    Compass(i2c_inst_t *i2c);
     ~Compass();
     void Read(SensorsData& sensors_data);
     int TestConnection();
@@ -37,7 +37,7 @@ private:
     static constexpr uint8_t MAG_Z_LSB{12}; //---  z
     static constexpr uint8_t MAG_Z_MSB{13};
 
-    i2c_inst_t *i2c_{i2c1};
+    i2c_inst_t *i2c_;
 };
 
 #endif //LSM303D_H

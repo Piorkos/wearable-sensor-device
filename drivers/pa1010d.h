@@ -14,7 +14,7 @@ class GPS
 public:
     GPS();
     ~GPS();
-    bool HasFix(SensorsData& sensors_data);
+    bool HasFix();
     bool ReadData1Per10(SensorsData& sensors_data, int& error);
     int TestConnection();
 

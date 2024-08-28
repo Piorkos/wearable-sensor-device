@@ -1,6 +1,7 @@
 #include "lsm303d.h"
 
-Compass::Compass()
+Compass::Compass(i2c_inst_t *i2c)
+:i2c_{i2c}
 {
     uint8_t buf[] = {CTRL_1, 0x57};
     i2c_write_blocking(i2c_, LSM303D_I2C_ADDR, buf, 2, false);

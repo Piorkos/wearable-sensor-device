@@ -14,19 +14,18 @@ class ButtonsController
 public:
     ButtonsController();
 
-    void UpdateButtons(bool first_enable, bool second_enable, std::string first_label, std::string second_label);
-
-    static bool btn1_pressed;
-    static bool btn2_pressed;
+    bool IsBtn1Pressed();
+    bool IsBtn2Pressed();
+    void UpdateButtons(bool first_enable, bool second_enable);
 
 private:
-
     static void ButtonCallback(uint gpio, uint32_t events);
-    
     static int64_t EnableButtons(alarm_id_t id, void *irq_state);
 
-    static bool irq_btn_1_enabled;
-    static bool irq_btn_2_enabled;
+    static bool btn1_pressed_;
+    static bool btn2_pressed_;
+    static bool irq_btn_1_enabled_;
+    static bool irq_btn_2_enabled_;
 };
 
 
