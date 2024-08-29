@@ -1,5 +1,6 @@
 #include "hardware/flash.h"
 #include "hardware/sync.h"
+#include "pico/time.h"
 #include "storage.h"
 
 Storage::Storage() : saved_pages_counter_{0}, trainings_counter_{0}
@@ -142,6 +143,7 @@ int Storage::UpdateDataToStore(SensorsData& sensors_data, bool include_gps)
         std::string string_to_store = data_to_store_.substr(0, FLASH_PAGE_SIZE);
         data_to_store_.erase(0, FLASH_PAGE_SIZE);
         printf("storage::UpdateDataToStore - string sent to storage:%s\n", string_to_store.c_str());
+        sleep_ms(10);
         bool success = SaveStringInFlash(string_to_store);
         if(!success)
         {
@@ -222,16 +224,17 @@ void Storage::FullEraseData()
 
     int max_sectors = kMaxPages_/16;
     uint32_t offset{kFlashStorageStartOffset_};
+    printf("max_sectors = %i \n", max_sectors);
+    printf("offset =  %x8 \n", offset);
     
     uint32_t ints{};
-    uint8_t factor{20};
 
 
-    for (int i = 1; i < max_sectors; (i + factor)) 
+    for (int i = 1; i < max_sectors; ++i) 
     {
-        printf("storage::FullEraseData - sector = %i \n", i);
+        printf("storage::FullEraseData - sector = %i, offset = %x8 \n", i, offset);
         ints = save_and_disable_interrupts();
-        flash_range_erase(offset, factor*FLASH_SECTOR_SIZE);
+        flash_range_erase(offset, FLASH_SECTOR_SIZE);
         restore_interrupts(ints);
 
         offset = (kFlashStorageStartOffset_ + i*FLASH_SECTOR_SIZE);

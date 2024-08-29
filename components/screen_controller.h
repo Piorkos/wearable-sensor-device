@@ -22,10 +22,10 @@ private:
     uint16_t line_1_y;
     uint16_t line_2_y;
     uint16_t btn_1_y;
-    uint16_t btn_1_x;
+    uint16_t btn_1_x;   //in BYTES
     uint16_t btn_2_y;
-    uint16_t btn_2_x;
-    uint16_t error_x;
+    uint16_t btn_2_x;   //in BYTES
+    uint16_t error_x;   //in BYTES
     uint16_t error_y;
 };
 

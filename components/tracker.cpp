@@ -8,6 +8,7 @@ Tracker::Tracker(ScreenController& screen, Storage& storage, GPS& gps, i2c_inst_
 
 void Tracker::Update()
 {
+    printf("Tracker::Update tick_counter_ = %i \n", tick_counter_);
     ++tick_counter_;
     
     // ---Read data from sensors
@@ -54,6 +55,7 @@ void Tracker::Reset()
 
 std::string Tracker::GetTrackingDuration()
 {
+    // printf("Tracker::GetTrackingDuration  \n");
     std::string time{};
 
     ++seconds_;
@@ -97,6 +99,9 @@ std::string Tracker::GetTrackingDuration()
 
 std::string Tracker::GetDistance()
 {
+    // printf("Tracker::GetDistance  \n");
     int run_distance{0};
-    std::string distance_s{std::to_string(run_distance) + "m"};
+    std::string distance_s{std::to_string(run_distance) + "M"};
+
+    return distance_s;
 }

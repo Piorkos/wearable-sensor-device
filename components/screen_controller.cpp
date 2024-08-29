@@ -5,12 +5,12 @@ ScreenController::ScreenController(Display* display)
 {
     printf("ScreenController Constructor \n");
 
-    line_1_y = 20;
-    line_2_y = 44;
-    btn_1_x = config::kHeight - 17;
-    btn_1_y = 0;
-    btn_2_x = config::kHeight - 17;
-    btn_2_x = config::kWidth - 48;
+    line_1_y = 22;
+    line_2_y = 46;
+    btn_1_x = 0;
+    btn_1_y = config::kHeight - 17;
+    btn_2_x = config::kWidth/8 - 7;
+    btn_2_y = config::kHeight - 17;
     error_x = 0;
     error_y = 0;
 
@@ -19,6 +19,8 @@ ScreenController::ScreenController(Display* display)
 
 void ScreenController::ShowOnScreen(std::string btn1_label, std::string btn2_label, std::string text_1, std::string text_2)
 {
+    printf("ScreenController::ShowOnScreen  \n");
+
     display_->ClearScreen();
     display_->DrawLineOfText(0, line_1_y, text_1, kFont_12_16);
     display_->DrawLineOfText(0, line_2_y, text_2, kFont_12_16);
@@ -29,6 +31,8 @@ void ScreenController::ShowOnScreen(std::string btn1_label, std::string btn2_lab
 
 void ScreenController::RefreshTrackingScreen(std::string text_1, std::string text_2)
 {
+    printf("ScreenController::RefreshTrackingScreen  \n");
+
     display_->DrawLineOfText(0, line_1_y, text_1, kFont_16_20);
     display_->DrawLineOfText(0, line_2_y, text_2, kFont_12_16);
     display_->RefreshScreen(line_1_y, (line_2_y + 20));

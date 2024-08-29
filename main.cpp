@@ -43,7 +43,7 @@ int main() {
     stdio_init_all();
 
     // ---wait for connection to CoolTerm on Mac
-    for(int i = 0; i < 2; ++i)
+    for(int i = 0; i < 4; ++i)
     {
         printf("waiting %i \n", i);
         sleep_ms(1000);
@@ -76,6 +76,8 @@ int main() {
 
 
     StateId current_state{StateId::kInit};
+
+    // storage.FullEraseData();
 
     while(true)
     {
