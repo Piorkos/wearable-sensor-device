@@ -25,7 +25,7 @@ void ScreenController::ShowOnScreen(std::string btn1_label, std::string btn2_lab
     display_->DrawLineOfText(0, line_1_y, text_1, kFont_12_16);
     display_->DrawLineOfText(0, line_2_y, text_2, kFont_12_16);
     display_->DrawLineOfText(btn_1_x, btn_1_y, btn1_label, kFont_12_16);
-    display_->DrawLineOfText(btn_2_x, btn_2_y, btn2_label, kFont_12_16);
+    display_->DrawLineOfText(btn_2_x, btn_2_y, btn2_label, kFont_12_16, Display::Mode::kMix);
     display_->RefreshScreen(line_1_y, config::kHeight);
 }
 

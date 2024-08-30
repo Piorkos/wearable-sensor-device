@@ -80,13 +80,11 @@ private:
     void PrintBuf(const uint8_t *buf, size_t len);
 
 
-    #define FLASH_TARGET_OFFSET (512 * 1024)
-    // // const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
-
-    const uint8_t * kFlashStorageStart_ = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
-    const uint32_t kFlashStorageStartOffset_ = (uint32_t) (FLASH_TARGET_OFFSET);
-    // const uint8_t * kFlashStorageStart_ = (const uint8_t *) &__flash_binary_end;
-    // const uint32_t kFlashStorageStartOffset_ = (uint32_t) (&__flash_binary_end - XIP_BASE);
+    // #define FLASH_TARGET_OFFSET (512 * 1024)
+    // const uint8_t * kFlashStorageStart_ = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
+    // const uint32_t kFlashStorageStartOffset_ = (uint32_t) (FLASH_TARGET_OFFSET);
+    const uint8_t * kFlashStorageStart_ = (const uint8_t *) &__flash_binary_end;
+    const uint32_t kFlashStorageStartOffset_ = (uint32_t) (&__flash_binary_end - XIP_BASE);
     const int kMaxPages_ = (PICO_FLASH_SIZE_BYTES - kFlashStorageStartOffset_)/FLASH_PAGE_SIZE;     // Pi Pico
 
     int saved_pages_counter_;

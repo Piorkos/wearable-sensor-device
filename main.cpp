@@ -18,7 +18,6 @@
 #include "drivers/display/sharp_mip_display.h"    // Sharp MIP
 #include "drivers/lsm6dsox.h"  // onboard's gyro, accel
 #include "core/distance.h"
-// #include "core/ui.h"           // controls UI
 #include "core/config.h"         // pins, parameters,...
 #include "core/helpers.h"         // helper functions
 #include "core/sensors_data.h" // Struct to hold data from sensors
@@ -43,7 +42,7 @@ int main() {
     stdio_init_all();
 
     // ---wait for connection to CoolTerm on Mac
-    for(int i = 0; i < 4; ++i)
+    for(int i = 0; i < 5; ++i)
     {
         printf("waiting %i \n", i);
         sleep_ms(1000);
@@ -62,8 +61,6 @@ int main() {
     // ---Buttons
     ButtonsController buttons;
     // ---GPS
-    hw_write_masked(&i2c1->hw->sda_hold, 5, I2C_IC_SDA_HOLD_IC_SDA_TX_HOLD_BITS);
-    bi_decl(bi_2pins_with_func(config::kI2C_0_sda_pin, config::kI2C_0_scl_pin, GPIO_FUNC_I2C)); // Make the I2C pins available to picotool
     GPS gps;
     // ---Storage
     Storage storage;
@@ -77,12 +74,8 @@ int main() {
 
     StateId current_state{StateId::kInit};
 
-    // storage.FullEraseData();
-
     while(true)
     {
-        // printf("while current state = %i \n", current_state);
-
         switch (current_state)
         {
         case StateId::kInit:
@@ -210,7 +203,7 @@ int main() {
             break;
         case StateId::kErasingInProgress:
             storage.EraseData();
-            sleep_ms(3000);
+            sleep_ms(3000);     // Delay, so the user has time to read the message "erasing". Otherwise it would be not clear if erasing happened or not.
 
             current_state = StateId::kStandby;
             screen.ShowOnScreen("OPT", "YES", "START", "TRACKING?");
