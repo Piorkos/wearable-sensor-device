@@ -31,7 +31,7 @@ SharpMipDisplay::SharpMipDisplay(uint16_t width, uint16_t height, spi_inst_t* sp
 
 void SharpMipDisplay::DrawLineOfText(uint16_t x, uint16_t y, const std::string& new_string, const uint8_t font[], Mode mode)
 {
-    printf("--SharpMipDisplay::DrawLineOfText : new_string = %s \n", new_string.c_str());
+    // printf("--SharpMipDisplay::DrawLineOfText : new_string = %s \n", new_string.c_str());
 
     if(mode == Mode::kReplace)
     {
@@ -82,7 +82,7 @@ void SharpMipDisplay::ResetPixel(uint16_t x, uint16_t y)
 
 void SharpMipDisplay::RefreshScreen(uint8_t line_start, uint8_t line_end)
 {
-    printf("-- SharpMipDisplay::RefreshScreen \n");
+    // printf("-- SharpMipDisplay::RefreshScreen \n");
     
     gpio_put(kDisplaySpiCsPin_, 1);
 
