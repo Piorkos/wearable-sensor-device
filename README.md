@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="/img/readme_header.jpg" />
+  <img src="/img/readme_header.png" />
 </p>
 
 # Wearable device for data collection from sensors
