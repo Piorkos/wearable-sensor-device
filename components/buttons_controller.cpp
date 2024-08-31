@@ -33,8 +33,8 @@ void ButtonsController::UpdateButtons(bool first_enable, bool second_enable)
     btn1_pressed_ = false;
     btn2_pressed_ = false;
     printf("ui::UpdateButtons: %b, %b \n", first_enable, second_enable);
-    gpio_set_irq_enabled_with_callback(config::kButton_left_pin, GPIO_IRQ_EDGE_FALL, false, ButtonCallback);
-    gpio_set_irq_enabled_with_callback(config::kButton_right_pin, GPIO_IRQ_EDGE_FALL, false, ButtonCallback);
+    gpio_set_irq_enabled_with_callback(config::kButton_left_pin, GPIO_IRQ_EDGE_RISE, false, ButtonCallback);
+    gpio_set_irq_enabled_with_callback(config::kButton_right_pin, GPIO_IRQ_EDGE_RISE, false, ButtonCallback);
     irq_btn_1_enabled_ = first_enable;
     irq_btn_2_enabled_ = second_enable;
     add_alarm_in_ms(500, EnableButtons, nullptr, false);
@@ -43,7 +43,7 @@ void ButtonsController::UpdateButtons(bool first_enable, bool second_enable)
 void ButtonsController::ButtonCallback(uint gpio, uint32_t events)
 {
     printf("ButtonCallback \n");
-    if(events == GPIO_IRQ_EDGE_FALL)
+    if(events == GPIO_IRQ_EDGE_RISE)
     {
         if(gpio == config::kButton_left_pin)
         {
@@ -60,8 +60,8 @@ void ButtonsController::ButtonCallback(uint gpio, uint32_t events)
 
 int64_t ButtonsController::EnableButtons(alarm_id_t id, void *irq_state)
 {
-    gpio_set_irq_enabled_with_callback(config::kButton_left_pin, GPIO_IRQ_EDGE_FALL, irq_btn_1_enabled_, ButtonCallback);
-    gpio_set_irq_enabled_with_callback(config::kButton_right_pin, GPIO_IRQ_EDGE_FALL, irq_btn_2_enabled_, ButtonCallback);
+    gpio_set_irq_enabled_with_callback(config::kButton_left_pin, GPIO_IRQ_EDGE_RISE, irq_btn_1_enabled_, ButtonCallback);
+    gpio_set_irq_enabled_with_callback(config::kButton_right_pin, GPIO_IRQ_EDGE_RISE, irq_btn_2_enabled_, ButtonCallback);
     
     return 0;
 }

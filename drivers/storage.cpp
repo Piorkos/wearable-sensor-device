@@ -3,9 +3,11 @@
 #include "pico/time.h"
 #include "storage.h"
 
-Storage::Storage() : saved_pages_counter_{0}, trainings_counter_{0}
+Storage::Storage() 
+: saved_pages_counter_{0}, trainings_counter_{0}
 {
     printf("Storage Constructor \n");
+    printf("Storage (const uint8_t *) &__flash_binary_end = %x8 \n", (const uint8_t *) &__flash_binary_end);
     printf("Storage kFlashStorageStart_ = %x8 \n", kFlashStorageStart_);
     printf("Storage kFlashStorageStartOffset_ = %x8 \n", kFlashStorageStartOffset_);
     printf("Storage kMaxPages_ = %u \n", kMaxPages_);
@@ -55,7 +57,7 @@ int Storage::RestoreSavedPagesCounter()
  */
 bool Storage::SaveStringInFlash(std::string data_to_save)
 {
-    // printf("storage::SaveStringInFlash saved_pages_counter_ = %i \n", saved_pages_counter_);
+    printf("storage::SaveStringInFlash saved_pages_counter_ = %i \n", saved_pages_counter_);
     if(saved_pages_counter_ < kMaxPages_)
     {
         uint32_t offset{(kFlashStorageStartOffset_ + (saved_pages_counter_ + 16)*FLASH_PAGE_SIZE)};
@@ -64,7 +66,7 @@ bool Storage::SaveStringInFlash(std::string data_to_save)
         // erase memory of next page
         if(saved_pages_counter_ % 16 == 0)
         {
-            // printf("storage::SaveStringInFlash erase sector %i \n", (saved_pages_counter_ + 1));
+            printf("storage::SaveStringInFlash erase sector %i \n", (saved_pages_counter_ + 1));
             ints = save_and_disable_interrupts();
             flash_range_erase(offset, FLASH_SECTOR_SIZE);
             restore_interrupts(ints);
@@ -75,7 +77,7 @@ bool Storage::SaveStringInFlash(std::string data_to_save)
         // For writing data first time, erase memory of current (i.e. = 0) page
         if(saved_pages_counter_ == 0)
         {
-            // printf("storage::SaveStringInFlash erase first sector \n");
+            printf("storage::SaveStringInFlash erase first sector \n");
             ints = save_and_disable_interrupts();
             flash_range_erase(offset, FLASH_SECTOR_SIZE);
             restore_interrupts(ints);
@@ -106,7 +108,7 @@ bool Storage::SaveStringInFlash(std::string data_to_save)
  */
 int Storage::UpdateDataToStore(SensorsData& sensors_data, bool include_gps)
 {
-    // printf("storage::UpdateDataToStore - include_gps=%b\n", include_gps);
+    printf("storage::UpdateDataToStore - include_gps=%b\n", include_gps);
 
     data_to_store_ += "|";
     if(include_gps)
@@ -136,13 +138,13 @@ int Storage::UpdateDataToStore(SensorsData& sensors_data, bool include_gps)
     data_to_store_ += ";";
     data_to_store_ += gyr_str;
 
-    // printf("storage::UpdateDataToStore - data_to_store_=%s\n", data_to_store_.c_str());
+    printf("storage::UpdateDataToStore - data_to_store_=%s\n", data_to_store_.c_str());
 
     if(data_to_store_.length() > FLASH_PAGE_SIZE)
     {
         std::string string_to_store = data_to_store_.substr(0, FLASH_PAGE_SIZE);
         data_to_store_.erase(0, FLASH_PAGE_SIZE);
-        // printf("storage::UpdateDataToStore - string sent to storage:%s\n", string_to_store.c_str());
+        printf("storage::UpdateDataToStore - string sent to storage:%s\n", string_to_store.c_str());
         sleep_ms(10);
         bool success = SaveStringInFlash(string_to_store);
         if(!success)
@@ -205,7 +207,7 @@ void Storage::ReadAllData()
 void Storage::EraseData()
 {
     printf("storage::EraseData \n");
-    
+
     uint32_t ints{};
     ints = save_and_disable_interrupts();
     flash_range_erase(kFlashStorageStartOffset_, 3*FLASH_SECTOR_SIZE);
