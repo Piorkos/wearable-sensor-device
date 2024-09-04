@@ -5,7 +5,6 @@
 # Wearable device for data collection from sensors
 This device is a versatile tool designed for collecting and storing data from a gyroscope, accelerometer, e-compass, and GPS.
 
-<ins>**Note:** The objective was to obtain a working device as soon as possible, hence the code is a **disorganized mess**. But it does the job ;) If I will have time I will redesign it. </ins>
 
 ---
 
