@@ -31,5 +31,11 @@
 *.out
 *.app
 
+# CMakeLists
+CMakeLists.txt
+
+# git
+*.gitignore
+
 # macOS
 *.DS_Store
