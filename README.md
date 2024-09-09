@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="/img/readme_header.png" />
+  <img src="/img/readme_header_3.jpg" />
 </p>
 
 # Wearable device for data collection from sensors - firmware
