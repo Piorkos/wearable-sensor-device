@@ -291,14 +291,14 @@ void SharpMipDisplay::PrintBinaryArray(const uint8_t* array_to_print, size_t wid
                 mask = mask >> k;
                 if(array_to_print[(i*width) + j] & mask)
                 {
-                    // printf(".");
+                    printf(".");
                 }
                 else
                 {
-                    // printf("+");
+                    printf("+");
                 }
             }
         }
-        // printf("\n");
+        printf("\n");
     }
 }
