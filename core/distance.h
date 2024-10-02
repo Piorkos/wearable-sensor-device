@@ -47,7 +47,7 @@ namespace distance
     {
         if(sensors_data.latitude != "zero")
         {
-            printf("distance::CalculateDistance - ZERO \n");
+            // printf("distance::CalculateDistance - ZERO \n");
 
             // only for debugging purposes
             sensors_data.lat_dd = -1;
@@ -62,7 +62,7 @@ namespace distance
         }
         else if(sensors_data.latitude != "err")
         {
-            printf("distance::CalculateDistance - ERROR \n");
+            // printf("distance::CalculateDistance - ERROR \n");
             // only for debugging purposes
             sensors_data.lat_dd = -2;
             sensors_data.lng_dd = -2;
@@ -76,7 +76,7 @@ namespace distance
         }
         else
         {
-            printf("distance::CalculateDistance - calculation \n");
+            // printf("distance::CalculateDistance - calculation \n");
             ++data_counter;
             lat2 += DMMtoDD(sensors_data.latitude);
             lng2 += DMMtoDD(sensors_data.longitude);
@@ -87,8 +87,8 @@ namespace distance
 
                 lat2 = lat2/3;
                 lng2 = lng2/3;
-                printf("lat/3 = %i \n", lat2);
-                printf("lng/3 = %i \n", lng2);
+                // printf("lat/3 = %i \n", lat2);
+                // printf("lng/3 = %i \n", lng2);
 
                 // only for debugging purposes
                 sensors_data.lat_dd = lat2;
@@ -104,15 +104,15 @@ namespace distance
                     double rad_lat{};                       // in radians
 
                     rad_lat = ((lat1 + lat2) / 2) * M_PI / (180 * factor_int);
-                    printf("rad_lat = %f \n", rad_lat);
+                    // printf("rad_lat = %f \n", rad_lat);
                     sensors_data.delta_lat = meridian_length * (lat2 - lat1) / 180;
-                    printf("-1- delta lat = %i \n", sensors_data.delta_lat);
+                    // printf("-1- delta lat = %i \n", sensors_data.delta_lat);
                     sensors_data.delta_lat = sensors_data.delta_lat / factor_int_meters;
-                    printf("-2- delta lat = %i \n", sensors_data.delta_lat);
+                    // printf("-2- delta lat = %i \n", sensors_data.delta_lat);
                     sensors_data.delta_lng = equator_length * (lng2 - lng1) / 360 * std::cos(rad_lat);
-                    printf("-1- delta ln = %i \n", sensors_data.delta_lng);
+                    // printf("-1- delta ln = %i \n", sensors_data.delta_lng);
                     sensors_data.delta_lng = sensors_data.delta_lng / factor_int_meters;
-                    printf("-2- delta ln = %i \n", sensors_data.delta_lng);
+                    // printf("-2- delta ln = %i \n", sensors_data.delta_lng);
                     
                     sensors_data.distance = std::sqrt(sensors_data.delta_lat*sensors_data.delta_lat + sensors_data.delta_lng*sensors_data.delta_lng);      
                 }
@@ -134,7 +134,7 @@ namespace distance
      */
     int32_t DMMtoDD(const std::string& dmm)
     {   
-        printf("distance::DMMtoDD - %s \n", dmm.c_str());
+        // printf("distance::DMMtoDD - %s \n", dmm.c_str());
         int32_t degree{};
         int32_t minutes{};
         int32_t decimal_minutes{};
@@ -149,25 +149,25 @@ namespace distance
         degree = std::stoi(dmm.substr(0, (pos-2)));
         minutes = std::stoi(dmm.substr((pos-2), pos)) * 10'000'000 / 60;
         std::string dec_m{dmm.substr((pos+1), 4)};
-        printf("-1- decimal minutes = %s \n", dec_m.c_str());
+        // printf("-1- decimal minutes = %s \n", dec_m.c_str());
         dec_m = dmm.substr((pos+1), 3);
-        printf("-2- decimal minutes = %s \n", dec_m.c_str());
+        // printf("-2- decimal minutes = %s \n", dec_m.c_str());
         decimal_minutes = std::stoi(dmm.substr((pos+1), 3)) * 10'000 / 60;   //removed last digit to decrease error
         // decimal_minutes = std::stoi(dmm.substr((pos+1), (dmm.length()-1))) * 1000 / 60;  // all digits used
         
-        printf("integers: %i - %i - %i \n", degree, minutes, decimal_minutes);
+        // printf("integers: %i - %i - %i \n", degree, minutes, decimal_minutes);
         minutes = minutes + decimal_minutes;
-        printf("integers 2: %i - %i - %i \n", degree, minutes, decimal_minutes);
+        // printf("integers 2: %i - %i - %i \n", degree, minutes, decimal_minutes);
 
         // Here I use unusual formatting and store DD value in int. Typical formatting would be:
         // std::string dd_string{std::to_string(degree) + "." + AddLeadingZeros(minutes)};
         // Hower this introduces issues with float precission. Using integer requires changes
         // in other calculations, this is why "factor_int" is used
         std::string dd_string{std::to_string(degree) + AddLeadingZeros(minutes)};
-        printf("dd string: %s \n", dd_string.c_str());
+        // printf("dd string: %s \n", dd_string.c_str());
 
         dd = std::stoi(dd_string) * sign;
-        printf("dd integer: %i \n", dd);
+        // printf("dd integer: %i \n", dd);
 
         return dd;
     }
@@ -208,7 +208,7 @@ namespace distance
     void TestCalculateDistance(SensorsData& sd, const double expected_distance)
     {
         CalculateDistance(sd);
-        printf("distance::TestCalculateDistance: %i - %i || %i == %2.8f \n \n", sd.delta_lat, sd.delta_lng, sd.distance, expected_distance);
+        // printf("distance::TestCalculateDistance: %i - %i || %i == %2.8f \n \n", sd.delta_lat, sd.delta_lng, sd.distance, expected_distance);
     }
 
     void TestSuiteCalculateDistance()

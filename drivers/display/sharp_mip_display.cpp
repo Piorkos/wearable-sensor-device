@@ -31,7 +31,7 @@ SharpMipDisplay::SharpMipDisplay(uint16_t width, uint16_t height, spi_inst_t* sp
 
 void SharpMipDisplay::DrawLineOfText(uint16_t x, uint16_t y, const std::string& new_string, const uint8_t font[], Mode mode)
 {
-    printf("--SharpMipDisplay::DrawLineOfText : new_string = %s \n", new_string.c_str());
+    // printf("--SharpMipDisplay::DrawLineOfText : new_string = %s \n", new_string.c_str());
 
     if(mode == Mode::kReplace)
     {
@@ -82,7 +82,7 @@ void SharpMipDisplay::ResetPixel(uint16_t x, uint16_t y)
 
 void SharpMipDisplay::RefreshScreen(uint8_t line_start, uint8_t line_end)
 {
-    printf("-- SharpMipDisplay::RefreshScreen \n");
+    // printf("-- SharpMipDisplay::RefreshScreen \n");
     
     gpio_put(kDisplaySpiCsPin_, 1);
 
@@ -124,7 +124,7 @@ void SharpMipDisplay::RefreshScreen(uint8_t line_start, uint8_t line_end)
 
 void SharpMipDisplay::ClearScreen()
 {
-    printf("-- ClearScreen \n");
+    // printf("-- ClearScreen \n");
 
     for(int i = 0; i < (kScreenWidthInWords_ * kScreenHeight_); ++i) 
     {
@@ -151,7 +151,7 @@ void SharpMipDisplay::ClearScreen()
 
 void SharpMipDisplay::ToggleVCOM()
 {
-    printf("-- SharpMipDisplay::ToggleVCOM \n");
+    // printf("-- SharpMipDisplay::ToggleVCOM \n");
     gpio_put(kDisplaySpiCsPin_, 1);
     uint8_t buf[22];
     if(vcom_bool_)
@@ -280,7 +280,7 @@ void SharpMipDisplay::DrawLineOfTextAdd(uint16_t x, uint16_t y, const std::strin
 
 void SharpMipDisplay::PrintBinaryArray(const uint8_t* array_to_print, size_t width, size_t heigth)
 {
-    printf("--SharpMipDisplay::PrintBinaryArray\n");
+    // printf("--SharpMipDisplay::PrintBinaryArray\n");
     for (size_t i = 0; i < heigth; i++)     // rows
     {
         for (size_t j = 0; j < width; j++)  // cols
@@ -291,14 +291,14 @@ void SharpMipDisplay::PrintBinaryArray(const uint8_t* array_to_print, size_t wid
                 mask = mask >> k;
                 if(array_to_print[(i*width) + j] & mask)
                 {
-                    printf(".");
+                    // printf(".");
                 }
                 else
                 {
-                    printf("+");
+                    // printf("+");
                 }
             }
         }
-        printf("\n");
+        // printf("\n");
     }
 }

@@ -19,7 +19,7 @@ void InitI2C()
     gpio_set_function(config::kI2C_1_scl_pin, GPIO_FUNC_I2C);
     gpio_pull_up(config::kI2C_1_sda_pin);
     gpio_pull_up(config::kI2C_1_scl_pin);
-    printf("I2C initialized \n");
+    // printf("I2C initialized \n");
 }
 
 void InitSPI()
@@ -29,7 +29,7 @@ void InitSPI()
     gpio_set_function(config::kSPI_mosi_pin, GPIO_FUNC_SPI);
     gpio_set_function(config::kSPI_sck_pin, GPIO_FUNC_SPI);
 
-    printf("SPI initialized \n");
+    // printf("SPI initialized \n");
 }
 
 

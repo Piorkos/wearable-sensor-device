@@ -9,8 +9,6 @@
 #include "hardware/flash.h"
 #include "hardware/sync.h"
 
-#include "pico-ssd1306/ssd1306.h"
-#include "pico-ssd1306/textRenderer/TextRenderer.h"
 #include "drivers/lsm303d.h"            // compass
 #include "drivers/storage.h"            // onboard Flesh memory
 #include "drivers/pa1010d.h"            // GPS
@@ -44,7 +42,7 @@ int main() {
     // ---wait for connection to CoolTerm on Mac
     for(int i = 0; i < 5; ++i)
     {
-        printf("waiting %i \n", i);
+        // printf("waiting %i \n", i);
         sleep_ms(1000);
     }
 
@@ -138,7 +136,7 @@ int main() {
         case StateId::kTraining:
             if(tick_100_ms)
             {
-                printf("StateId::kTraining tick_100_ms \n");
+                // printf("StateId::kTraining tick_100_ms \n");
                 tick_100_ms = false;
                 tracker->Update();
             }

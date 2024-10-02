@@ -3,12 +3,12 @@
 Tracker::Tracker(ScreenController& screen, Storage& storage, GPS& gps, i2c_inst_t *i2c_imu, i2c_inst_t *i2c_compass)
 :screen_{screen}, storage_{storage}, gps_{gps}, imu_{i2c_imu}, compass_{i2c_compass}, sensors_data_{}, tick_counter_{0}
 {
-    printf("Tracker Constructor \n");
+    // printf("Tracker Constructor \n");
 }
 
 void Tracker::Update()
 {
-    printf("Tracker::Update tick_counter_ = %i \n", tick_counter_);
+    // printf("Tracker::Update tick_counter_ = %i \n", tick_counter_);
     ++tick_counter_;
     
     // ---Read data from sensors
@@ -34,10 +34,10 @@ void Tracker::Update()
 
     // ---write data to FLASH
     int success = storage_.UpdateDataToStore(sensors_data_, gps_data);
-    printf("MAIN::training: UpdateDataToStore result = %i \n", success);
+    // printf("MAIN::training: UpdateDataToStore result = %i \n", success);
 
     // ---Update Screen every 1s
-    if(tick_counter_ > 10)
+    if(tick_counter_ == 10)
     {
         tick_counter_ = 0;
         screen_.RefreshTrackingScreen(GetTrackingDuration(), GetDistance());

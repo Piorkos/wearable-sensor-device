@@ -3,7 +3,7 @@
 ScreenController::ScreenController(Display* display)
 :display_{display}
 {
-    printf("ScreenController Constructor \n");
+    // printf("ScreenController Constructor \n");
 
     line_1_y = 22;
     line_2_y = 46;
@@ -19,7 +19,7 @@ ScreenController::ScreenController(Display* display)
 
 void ScreenController::ShowOnScreen(std::string btn1_label, std::string btn2_label, std::string text_1, std::string text_2)
 {
-    printf("ScreenController::ShowOnScreen  \n");
+    // printf("ScreenController::ShowOnScreen  \n");
 
     display_->ClearScreen();
     display_->DrawLineOfText(0, line_1_y, text_1, kFont_12_16);
@@ -31,7 +31,7 @@ void ScreenController::ShowOnScreen(std::string btn1_label, std::string btn2_lab
 
 void ScreenController::RefreshTrackingScreen(std::string text_1, std::string text_2)
 {
-    printf("ScreenController::RefreshTrackingScreen  \n");
+    // printf("ScreenController::RefreshTrackingScreen  \n");
 
     display_->DrawLineOfText(0, line_1_y, text_1, kFont_16_20);
     display_->DrawLineOfText(0, line_2_y, text_2, kFont_12_16);

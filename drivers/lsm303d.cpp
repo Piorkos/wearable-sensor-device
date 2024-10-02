@@ -38,7 +38,7 @@ void Compass::Read(SensorsData& sensors_data)
     int bytesRead = i2c_read_blocking(i2c_, LSM303D_I2C_ADDR, bufferM, 1, false);
     if(bytesRead == PICO_ERROR_GENERIC)
     {
-        printf("COMPAS READING ERROR, bytes= %d \n", bytesRead);
+      // printf("COMPAS READING ERROR, bytes= %d \n", bytesRead);
     }
     i2c_write_blocking(i2c_, LSM303D_I2C_ADDR, &MAG_X_LSB, 1, true);
     i2c_read_blocking(i2c_, LSM303D_I2C_ADDR, bufferL, 1, false);
@@ -66,12 +66,12 @@ int Compass::TestConnection()
     int bytes_read = i2c_read_blocking(i2c_, LSM303D_I2C_ADDR, &buffer, 1, false);
     if(bytes_read == PICO_ERROR_GENERIC)
     {
-        printf("COMPAS READING ERROR - NO CONNECTION \n");
+      // printf("COMPAS READING ERROR - NO CONNECTION \n");
         return -2;
     }
     else if(bytes_read == PICO_ERROR_TIMEOUT)
     {
-        printf("COMPAS READING ERROR - TIMEOUT \n");
+      // printf("COMPAS READING ERROR - TIMEOUT \n");
         return -1;
     }
     return 1;

@@ -4,7 +4,7 @@
 
 GPS::GPS()
 {
-    printf("GPS contructor \n");
+  // printf("GPS contructor \n");
 
     // Convert character array to bytes for writing
     size_t com_length{strlen(init_command)};
@@ -23,7 +23,7 @@ GPS::GPS()
 
 GPS::~GPS()
 {
-    printf("GPS destructor \n");
+  // printf("GPS destructor \n");
 
     i2c_ = nullptr;
     delete i2c_;
@@ -41,7 +41,7 @@ bool GPS::HasFix()
         ++read_gps_flag;
         if(read_gps_flag == 10)
         {
-            printf("HasFix: gps_fix_count = %i \n", gps_fix_count);
+          // printf("HasFix: gps_fix_count = %i \n", gps_fix_count);
             read_gps_flag = 0;
             memset(numcommand, 0, MAX_READ);    //probably not needed because it is executed in ReadTaw()
             ReadRaw(sensors_data);
@@ -73,19 +73,19 @@ bool GPS::HasFix()
  */
 bool GPS::ReadData1Per10(SensorsData& sensors_data, int& error)
 {
-    printf("GPS::ReadData1Per10 \n");
+  // printf("GPS::ReadData1Per10 \n");
 
     ++read_gps_flag;
     if(read_gps_flag == 10)
     {
-        printf("GPS::ReadData1Per10 - read_gps_flag = 10 \n");
+      // printf("GPS::ReadData1Per10 - read_gps_flag = 10 \n");
         read_gps_flag = 0;
 
         memset(numcommand, 0, MAX_READ);
-        printf("GPS::ReadData1Per10 - 1 \n");
+      // printf("GPS::ReadData1Per10 - 1 \n");
         error = ReadRaw(sensors_data);
         error_cache = error;
-        printf("GPS::ReadData1Per10 - 2 \n");
+      // printf("GPS::ReadData1Per10 - 2 \n");
 
         return true;
     }
@@ -104,18 +104,18 @@ bool GPS::ReadData1Per10(SensorsData& sensors_data, int& error)
  */
 int GPS::TestConnection()
 {
-    printf("GPS::TestConnection \n");
+  // printf("GPS::TestConnection \n");
 
     uint8_t buffer;
     int bytes_read = i2c_read_blocking(i2c_, ADDR, &buffer, 1, false);
     if(bytes_read == PICO_ERROR_GENERIC)
     {
-        printf("GPS READING ERROR - NO CONNECTION \n");
+      // printf("GPS READING ERROR - NO CONNECTION \n");
         return -2;
     }
     else if(bytes_read == PICO_ERROR_TIMEOUT)
     {
-        printf("GPS READING ERROR - TIMEOUT \n");
+      // printf("GPS READING ERROR - TIMEOUT \n");
         return -1;
     }
     return 1;
@@ -123,7 +123,7 @@ int GPS::TestConnection()
 
 void GPS::ParseGNMRC(char output[], char protocol[], std::string& latitude, std::string& longitude, std::string& utc_time)
 {
-    printf("GPS::parse_GNMRC numcommand: %s \n", output);
+  // printf("GPS::parse_GNMRC numcommand: %s \n", output);
 
     // Finds location of protocol message in output
     char *com_index = strstr(output, protocol);
@@ -158,17 +158,16 @@ void GPS::ParseGNMRC(char output[], char protocol[], std::string& latitude, std:
 
     if (strcmp(protocol, "GNRMC") == 0) {
         
-        printf("Protcol:%s\n", gps_data[0]);
-        printf("UTC Time: %s\n", gps_data[1]);
-        printf("Status: %s\n", gps_data[2]);
-        printf("Latitude: %s\n", gps_data[3]);
+      // printf("Protcol:%s\n", gps_data[0]);
+      // printf("UTC Time: %s\n", gps_data[1]);
+      // printf("Status: %s\n", gps_data[2]);
+      // printf("Latitude: %s\n", gps_data[3]);
         // printf("N/S indicator: %s\n", gps_data[4]);
-        printf("Longitude: %s\n", gps_data[5]);
-        printf("E/W indicator: %s\n", gps_data[6]);
+      // printf("Longitude: %s\n", gps_data[5]);
+      // printf("E/W indicator: %s\n", gps_data[6]);
         // printf("Speed over ground: %s\n", gps_data[7]);
         // printf("Course over ground: %s\n", gps_data[8]);
-        printf("Date: %c%c/%c%c/%c%c\n", gps_data[9][0], gps_data[9][1], gps_data[9][2], gps_data[9][3], gps_data[9][4],
-            gps_data[9][5]);
+      // printf("Date: %c%c/%c%c/%c%c\n", gps_data[9][0], gps_data[9][1], gps_data[9][2], gps_data[9][3], gps_data[9][4], gps_data[9][5]);
         // printf("Magnetic Variation: %s\n", gps_data[10]);
         // printf("E/W degree indicator: %s\n", gps_data[11]);
         // printf("Mode: %s\n", gps_data[12]);
@@ -202,7 +201,7 @@ int GPS::ReadRaw(SensorsData& sensors_data)
     int bytes_read = i2c_read_blocking(i2c_, ADDR, buffer, MAX_READ, false);
     if(bytes_read == PICO_ERROR_GENERIC)
     {
-        printf("GPS READING ERROR - NO CONNECTION \n");
+      // printf("GPS READING ERROR - NO CONNECTION \n");
         sensors_data.latitude = "err";
         sensors_data.longitude = "err";
         sensors_data.utc_time = "err";
@@ -210,7 +209,7 @@ int GPS::ReadRaw(SensorsData& sensors_data)
     }
     else if(bytes_read == PICO_ERROR_TIMEOUT)
     {
-        printf("GPS READING ERROR - TIMEOUT \n");
+      // printf("GPS READING ERROR - TIMEOUT \n");
         sensors_data.latitude = "err";
         sensors_data.longitude = "err";
         sensors_data.utc_time = "err";

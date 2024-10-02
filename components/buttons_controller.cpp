@@ -32,7 +32,7 @@ void ButtonsController::UpdateButtons(bool first_enable, bool second_enable)
 {
     btn1_pressed_ = false;
     btn2_pressed_ = false;
-    printf("ui::UpdateButtons: %b, %b \n", first_enable, second_enable);
+    // printf("ui::UpdateButtons: %b, %b \n", first_enable, second_enable);
     gpio_set_irq_enabled_with_callback(config::kButton_left_pin, GPIO_IRQ_EDGE_RISE, false, ButtonCallback);
     gpio_set_irq_enabled_with_callback(config::kButton_right_pin, GPIO_IRQ_EDGE_RISE, false, ButtonCallback);
     irq_btn_1_enabled_ = first_enable;
@@ -42,17 +42,17 @@ void ButtonsController::UpdateButtons(bool first_enable, bool second_enable)
 
 void ButtonsController::ButtonCallback(uint gpio, uint32_t events)
 {
-    printf("ButtonCallback \n");
+    // printf("ButtonCallback \n");
     if(events == GPIO_IRQ_EDGE_RISE)
     {
         if(gpio == config::kButton_left_pin)
         {
-            printf("ButtonCallback BTN 1 \n");
+            // printf("ButtonCallback BTN 1 \n");
             btn1_pressed_ = true;
         }
         if(gpio == config::kButton_right_pin)
         {
-            printf("ButtonCallback BTN 2 \n");
+            // printf("ButtonCallback BTN 2 \n");
             btn2_pressed_ = true;
         }
     }
