@@ -4,9 +4,9 @@ SharpMipDisplay::SharpMipDisplay(uint16_t width, uint16_t height, spi_inst_t* sp
 : Display(width, height), kDisplaySpiCsPin_{display_cs_pin}, kSPI_{spi}
 {
     // Set Chip Select pin used by SPI 
-    gpio_init(config::kSPI_cs_pin);
-    gpio_set_dir(config::kSPI_cs_pin, GPIO_OUT);
-    gpio_put(config::kSPI_cs_pin, 0);  // this display is low on inactive
+    gpio_init(kDisplaySpiCsPin_);
+    gpio_set_dir(kDisplaySpiCsPin_, GPIO_OUT);
+    gpio_put(kDisplaySpiCsPin_, 0);  // this display is low on inactive
     sleep_ms(10);
 
     // Initialize buffer with white pixels
