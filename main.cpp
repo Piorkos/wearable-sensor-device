@@ -52,6 +52,7 @@ int main() {
     InitI2C();
     InitSPI();
 
+
     // ------Init peripherals
     // ---Screen
     Display* display = new SharpMipDisplay(config::kWidth, config::kHeight, spi1, config::kSPI_cs_pin);

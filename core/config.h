@@ -3,14 +3,20 @@
 
 #include <string>
 
-// *************************
-// ---Uncomment below line to build for Arduino Nano RP2040 Connect. Otherwise it will build for RP Pico
+// *****************************
+// Select used hardware platform
+// *****************************
+// BOARD
 #define ARDUINO_NANO_RP2040
-// ---Uncoment below line to switch to Sharp MIP display, otherwise it will build for SSD1306
-#define SHARP_MIP
+// #define RP_PI_PICO
+// DISPLAY
+#define DISPLAY_SHARP_MIP
+// #define DISPLAY_SSD1306
+// #define DISPLAY_SH1106
+// GYROSCOPE AND ACCELEROMETER
 
 
-#ifdef ARDUINO_NANO_RP2040
+#if defined(ARDUINO_NANO_RP2040)
 namespace config
 {
     // ---I2C
@@ -28,41 +34,49 @@ namespace config
     inline constexpr uint kButton_left_pin{29};        // left
     inline constexpr uint kButton_right_pin{6};        // right
 }
-#else
+#elif defined(RP_PI_PICO)
 namespace config
 {
     // ---I2C
     inline constexpr uint kI2C_1_sda_pin{2};
     inline constexpr uint kI2C_1_scl_pin{3};
-    inline constexpr uint kI2C_0_sda_pin{4};
-    inline constexpr uint kI2C_0_scl_pin{5};
+    inline constexpr uint kI2C_0_sda_pin{16};
+    inline constexpr uint kI2C_0_scl_pin{17};
     // ---SPI - Confirm pins!!!
     inline constexpr uint kSPI_sck_pin{6};          // SCLK / SCK
     inline constexpr uint kSPI_mosi_pin{7};         // MOSI / COPI
     inline constexpr uint kSPI_cs_pin{5};           // SS / CS
     // ---BUTTONS
-    inline constexpr uint kButton_1_pin{};        // right top
-    inline constexpr uint kButton_2_pin{};        // right bottom
+    inline constexpr uint kButton_left_pin{14};        // right top
+    inline constexpr uint kButton_right_pin{15};        // right bottom
 }
+#else
+#error "Select hardware platform: board not selected"
 #endif
 
 
-#ifdef SHARP_MIP
-// ---Sharp display
+#if defined(DISPLAY_SHARP_MIP)
 namespace config
 {
     inline constexpr uint8_t kWidth{144};
     inline constexpr uint8_t kHeight{168};
 }
-#else
-// ---OLED display
+#elif defined(DISPLAY_SSD1306)
 namespace config
 {
     inline constexpr uint8_t kWidth{128};
     inline constexpr uint8_t kHeight{64};
     inline constexpr uint16_t kOledAddress{0x3C};
-    inline constexpr uint8_t kSideFontSize{8};
 }
+#elif defined(DISPLAY_SH1106)
+namespace config
+{
+    inline constexpr uint8_t kWidth{128};
+    inline constexpr uint8_t kHeight{64};
+    inline constexpr uint16_t kOledAddress{0x3C};
+}
+#else
+#error "Select hardware platform: display not selected"
 #endif
 
 
