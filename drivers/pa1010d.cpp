@@ -4,7 +4,7 @@
 
 GPS::GPS()
 {
-  // printf("GPS contructor \n");
+  printf("GPS contructor \n");
 
     // Convert character array to bytes for writing
     size_t com_length{strlen(init_command)};
@@ -123,7 +123,7 @@ int GPS::TestConnection()
 
 void GPS::ParseGNMRC(char output[], char protocol[], std::string& latitude, std::string& longitude, std::string& utc_time)
 {
-  // printf("GPS::parse_GNMRC numcommand: %s \n", output);
+    printf("GPS::parse_GNMRC numcommand: %s \n", output);
 
     // Finds location of protocol message in output
     char *com_index = strstr(output, protocol);
@@ -158,16 +158,16 @@ void GPS::ParseGNMRC(char output[], char protocol[], std::string& latitude, std:
 
     if (strcmp(protocol, "GNRMC") == 0) {
         
-      // printf("Protcol:%s\n", gps_data[0]);
-      // printf("UTC Time: %s\n", gps_data[1]);
-      // printf("Status: %s\n", gps_data[2]);
-      // printf("Latitude: %s\n", gps_data[3]);
+        // printf("Protcol:%s\n", gps_data[0]);
+        // printf("UTC Time: %s\n", gps_data[1]);
+        // printf("Status: %s\n", gps_data[2]);
+        // printf("Latitude: %s\n", gps_data[3]);
         // printf("N/S indicator: %s\n", gps_data[4]);
-      // printf("Longitude: %s\n", gps_data[5]);
-      // printf("E/W indicator: %s\n", gps_data[6]);
+        // printf("Longitude: %s\n", gps_data[5]);
+        // printf("E/W indicator: %s\n", gps_data[6]);
         // printf("Speed over ground: %s\n", gps_data[7]);
         // printf("Course over ground: %s\n", gps_data[8]);
-      // printf("Date: %c%c/%c%c/%c%c\n", gps_data[9][0], gps_data[9][1], gps_data[9][2], gps_data[9][3], gps_data[9][4], gps_data[9][5]);
+        // printf("Date: %c%c/%c%c/%c%c\n", gps_data[9][0], gps_data[9][1], gps_data[9][2], gps_data[9][3], gps_data[9][4], gps_data[9][5]);
         // printf("Magnetic Variation: %s\n", gps_data[10]);
         // printf("E/W degree indicator: %s\n", gps_data[11]);
         // printf("Mode: %s\n", gps_data[12]);

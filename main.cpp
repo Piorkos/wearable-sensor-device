@@ -12,13 +12,13 @@
 #include "drivers/lsm303d.h"            // compass
 #include "drivers/storage.h"            // onboard Flesh memory
 #include "drivers/pa1010d.h"            // GPS
-#include "drivers/display/display.h"    // Sharp MIP
-#include "drivers/display/sharp_mip_display.h"    // Sharp MIP
-#include "drivers/lsm6dsox.h"  // onboard's gyro, accel
+#include "drivers/display/sharp-mip/display.h"                        // Sharp MIP
+#include "drivers/display/sharp-mip/sharp-mip/sharp_mip_display.h"    // Sharp MIP
+#include "drivers/lsm6dsox.h"           // onboard's gyro, accel
 #include "core/distance.h"
-#include "core/config.h"         // pins, parameters,...
-#include "core/helpers.h"         // helper functions
-#include "core/sensors_data.h" // Struct to hold data from sensors
+#include "core/config.h"                // pins, parameters,...
+#include "core/helpers.h"               // helper functions
+#include "core/sensors_data.h"          // Struct to hold data from sensors
 #include "components/buttons_controller.h"
 #include "components/screen_controller.h"
 #include "components/tracker.h"
@@ -42,7 +42,7 @@ int main() {
     // ---wait for connection to CoolTerm on Mac
     for(int i = 0; i < 5; ++i)
     {
-        // printf("waiting %i \n", i);
+        printf("waiting %i \n", i);
         sleep_ms(1000);
     }
 
@@ -137,7 +137,7 @@ int main() {
         case StateId::kTraining:
             if(tick_100_ms)
             {
-                // printf("StateId::kTraining tick_100_ms \n");
+                printf("StateId::kTraining tick_100_ms \n");
                 tick_100_ms = false;
                 tracker->Update();
             }

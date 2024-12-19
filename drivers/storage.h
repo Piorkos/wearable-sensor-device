@@ -79,8 +79,10 @@ private:
 
     void PrintBuf(const uint8_t *buf, size_t len);
 
-    const uint32_t kFlashStorageStartOffset_ = (((uint32_t) (&__flash_binary_end - XIP_BASE))/4096 + 1) * 4096;
-    const uint8_t * kFlashStorageStart_ = (const uint8_t *) (XIP_BASE + kFlashStorageStartOffset_);
+
+    const uintptr_t flashEndAddress = (const uintptr_t)&__flash_binary_end;
+    const uint8_t * kFlashStorageStart_ = (const uint8_t *) ((flashEndAddress + FLASH_SECTOR_SIZE) & 0xFFFFF000);   // it needs to be multiplication of 4096
+    const uint32_t kFlashStorageStartOffset_ = (uint32_t)kFlashStorageStart_ - XIP_BASE;
     const int kMaxPages_ = (PICO_FLASH_SIZE_BYTES - kFlashStorageStartOffset_)/FLASH_PAGE_SIZE;     // Pi Pico
 
     int saved_pages_counter_;

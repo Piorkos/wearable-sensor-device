@@ -22,24 +22,24 @@ void ScreenController::ShowOnScreen(std::string btn1_label, std::string btn2_lab
     // printf("ScreenController::ShowOnScreen  \n");
 
     display_->ClearScreen();
-    display_->DrawLineOfText(0, line_1_y, text_1, kFont_12_16);
-    display_->DrawLineOfText(0, line_2_y, text_2, kFont_12_16);
-    display_->DrawLineOfText(btn_1_x, btn_1_y, btn1_label, kFont_12_16);
-    display_->DrawLineOfText(btn_2_x, btn_2_y, btn2_label, kFont_12_16, Display::Mode::kMix);
+    display_->DrawLineOfText(0, line_1_y, text_1, kFont_16_20);
+    display_->DrawLineOfText(0, line_2_y, text_2, kFont_16_20);
+    display_->DrawLineOfText(btn_1_x, btn_1_y, btn1_label, kFont_16_20);
+    display_->DrawLineOfText(btn_2_x, btn_2_y, btn2_label, kFont_16_20, Display::Mode::kMix);
     display_->RefreshScreen(line_1_y, config::kHeight);
 }
 
 void ScreenController::RefreshTrackingScreen(std::string text_1, std::string text_2)
 {
-    // printf("ScreenController::RefreshTrackingScreen  \n");
+    printf("ScreenController::RefreshTrackingScreen  \n");
 
-    display_->DrawLineOfText(0, line_1_y, text_1, kFont_16_20);
-    display_->DrawLineOfText(0, line_2_y, text_2, kFont_12_16);
+    display_->DrawLineOfText(0, line_1_y, text_1, kFont_24_30);
+    display_->DrawLineOfText(0, line_2_y, text_2, kFont_16_20);
     display_->RefreshScreen(line_1_y, (line_2_y + 20));
 }
 
 void ScreenController::ShowError(std::string error_msg)
 {
-    display_->DrawLineOfText(error_x, error_y, error_msg, kFont_12_16);
+    display_->DrawLineOfText(error_x, error_y, error_msg, kFont_16_20);
     display_->RefreshScreen(error_y, (error_y + 20));
 }

@@ -4,7 +4,7 @@
 Imu::Imu(i2c_inst_t *i2c)
 :i2c_{i2c}
 {
-    // printf("Imu Constructor \n");
+    printf("Imu Constructor \n");
 
 
     uint8_t buffer[1];
@@ -14,15 +14,15 @@ Imu::Imu(i2c_inst_t *i2c)
     int bytesRead = i2c_read_blocking(i2c_, LSM6DSOX_ADDRESS, buffer, 1, false);
     if(bytesRead == PICO_ERROR_GENERIC)
     {
-        // printf("IMU ADDRESS READING ERROR, bytes= %d \n", bytesRead);
+        printf("IMU ADDRESS READING ERROR, bytes= %d \n", bytesRead);
     }
     if (!(buffer[0] == 0x6C || buffer[0] == 0x69))
     {
-        // printf("WRONG IMU ADDRESS \n");
+        printf("WRONG IMU ADDRESS \n");
     }
     else
     {
-        // printf("CORRECT IMU ADDRESS \n");
+        printf("CORRECT IMU ADDRESS \n");
     }
 
   
@@ -70,6 +70,8 @@ void Imu::End()
 // void Imu::ReadAccelerometer(float& x, float& y, float& z)
 void Imu::ReadAccelerometer(SensorsData& sensors_data)
 {
+    printf("Imu::ReadAccelerometer \n");
+    
     int16_t buf[3];
     uint8_t reg{LSM6DSOX_OUTX_L_A};
 
@@ -77,7 +79,7 @@ void Imu::ReadAccelerometer(SensorsData& sensors_data)
     int bytesRead = i2c_read_blocking(i2c_, LSM6DSOX_ADDRESS, (uint8_t*)buf, 6, false);
     if(bytesRead == PICO_ERROR_GENERIC)
     {
-        // printf("IMU ACCEL READING ERROR, bytes= %d \n", bytesRead);
+        printf("IMU ACCEL READING ERROR, bytes= %d \n", bytesRead);
     }
     else
     {
@@ -85,6 +87,8 @@ void Imu::ReadAccelerometer(SensorsData& sensors_data)
         sensors_data.accelerometer[1] = buf[1] * 8.0 / 32768.0;
         sensors_data.accelerometer[2] = buf[2] * 8.0 / 32768.0;
     }
+
+    printf("Accelerometer: x=%f, y=%f, z=%f \n", sensors_data.accelerometer[0], sensors_data.accelerometer[1], sensors_data.accelerometer[2]);
 }
 
 int Imu::AccelerometerDataAvailable()
@@ -96,7 +100,7 @@ int Imu::AccelerometerDataAvailable()
     int bytesRead = i2c_read_blocking(i2c_, LSM6DSOX_ADDRESS, (uint8_t*)buf, 1, false);
     if(bytesRead == PICO_ERROR_GENERIC)
     {
-        // printf("IMU ACCEL READING ERROR, bytes= %d \n", bytesRead);
+        printf("IMU ACCEL READING ERROR, bytes= %d \n", bytesRead);
     }
     else if(buf[0] & 0x01)
     {
@@ -107,6 +111,7 @@ int Imu::AccelerometerDataAvailable()
 
 void Imu::ReadGyroscope(SensorsData& sensors_data)
 {
+    printf("Imu::ReadGyroscope \n");
     int16_t buf[3];
     uint8_t reg{LSM6DSOX_OUTX_L_G};
 
@@ -114,7 +119,7 @@ void Imu::ReadGyroscope(SensorsData& sensors_data)
     int bytesRead = i2c_read_blocking(i2c_, LSM6DSOX_ADDRESS, (uint8_t*)buf, 6, false);
     if(bytesRead == PICO_ERROR_GENERIC)
     {
-        // printf("IMU GYROSCOPE READING ERROR, bytes= %d \n", bytesRead);
+        printf("IMU GYROSCOPE READING ERROR, bytes= %d \n", bytesRead);
     }
     else
     {
@@ -122,6 +127,8 @@ void Imu::ReadGyroscope(SensorsData& sensors_data)
         sensors_data.gyroscope[1] = buf[1] * 2000.0 / 32768.0;
         sensors_data.gyroscope[2] = buf[2] * 2000.0 / 32768.0;
     }
+
+    printf("Gyroscop: x=%f, y=%f, z=%f \n", sensors_data.gyroscope[0], sensors_data.gyroscope[1], sensors_data.gyroscope[2]);
 }
 
 int Imu::GyroscopeDataAvailable()
@@ -133,7 +140,7 @@ int Imu::GyroscopeDataAvailable()
     int bytesRead = i2c_read_blocking(i2c_, LSM6DSOX_ADDRESS, (uint8_t*)buf, 1, false);
     if(bytesRead == PICO_ERROR_GENERIC)
     {
-        // printf("IMU GYROSCOPE READING ERROR, bytes= %d \n", bytesRead);
+        printf("IMU GYROSCOPE READING ERROR, bytes= %d \n", bytesRead);
     }
     else if(buf[0] & 0x02)
     {
@@ -169,7 +176,7 @@ int Imu::TemperatureDataAvailable()
     int bytesRead = i2c_read_blocking(i2c_, LSM6DSOX_ADDRESS, (uint8_t*)buf, 1, false);
     if(bytesRead == PICO_ERROR_GENERIC)
     {
-        // printf("IMU TEMPERATURE READING ERROR, bytes= %d \n", bytesRead);
+        printf("IMU TEMPERATURE READING ERROR, bytes= %d \n", bytesRead);
     }
     else if(buf[0] & 0x04)
     {
@@ -187,7 +194,7 @@ void Imu::ReadData()
     int bytesRead = i2c_read_blocking(i2c_, LSM6DSOX_ADDRESS, buffer, 6, false);
     if(bytesRead == PICO_ERROR_GENERIC)
     {
-        // printf("IMU READING ERROR, bytes= %d \n", bytesRead);
+        printf("IMU READING ERROR, bytes= %d \n", bytesRead);
     }
 }
 
@@ -202,12 +209,12 @@ int Imu::TestConnection()
     int bytes_read = i2c_read_blocking(i2c_, LSM6DSOX_ADDRESS, &buffer, 1, false);
     if(bytes_read == PICO_ERROR_GENERIC)
     {
-        // printf("IMU READING ERROR - NO CONNECTION \n");
+        printf("IMU READING ERROR - NO CONNECTION \n");
         return -2;
     }
     else if(bytes_read == PICO_ERROR_TIMEOUT)
     {
-        // printf("IMU READING ERROR - TIMEOUT \n");
+        printf("IMU READING ERROR - TIMEOUT \n");
         return -1;
     }
     return 1;

@@ -7,12 +7,15 @@ Storage::Storage()
 : saved_pages_counter_{0}, trainings_counter_{0}
 {
     printf("Storage Constructor \n");
-    printf("Storage (const uint8_t *) &__flash_binary_end = %x8 \n", (const uint8_t *) &__flash_binary_end);
-    printf("Storage kFlashStorageStart_ = %x8 \n", kFlashStorageStart_);
-    printf("Storage kFlashStorageStartOffset_ = %x8 \n", kFlashStorageStartOffset_);
+    printf("Storage (const uint8_t *) &__flash_binary_end = %08x \n", (const uint8_t *) &__flash_binary_end);
+    printf("Storage kFlashStorageStart_ = %08x \n", kFlashStorageStart_);
+    printf("Storage kFlashStorageStartOffset_ = %08x \n", kFlashStorageStartOffset_);
     printf("Storage kMaxPages_ = %u \n", kMaxPages_);
 
     RestoreSavedPagesCounter();
+
+    // Allocate memory, to make sure that when appending new data it will not faile because of unsufficient memory
+    data_to_store_.reserve(2*FLASH_PAGE_SIZE);
 
 }
 
@@ -57,7 +60,7 @@ int Storage::RestoreSavedPagesCounter()
  */
 bool Storage::SaveStringInFlash(std::string data_to_save)
 {
-  // printf("storage::SaveStringInFlash saved_pages_counter_ = %i \n", saved_pages_counter_);
+  printf("storage::SaveStringInFlash saved_pages_counter_ = %i \n", saved_pages_counter_);
     if(saved_pages_counter_ < kMaxPages_)
     {
         uint32_t offset{(kFlashStorageStartOffset_ + (saved_pages_counter_ + 16)*FLASH_PAGE_SIZE)};
@@ -66,7 +69,7 @@ bool Storage::SaveStringInFlash(std::string data_to_save)
         // erase memory of next page
         if(saved_pages_counter_ % 16 == 0)
         {
-          // printf("storage::SaveStringInFlash erase sector %i \n", (saved_pages_counter_ + 1));
+          printf("storage::SaveStringInFlash erase sector %i \n", (saved_pages_counter_ + 1));
             ints = save_and_disable_interrupts();
             flash_range_erase(offset, FLASH_SECTOR_SIZE);
             restore_interrupts(ints);
@@ -77,7 +80,7 @@ bool Storage::SaveStringInFlash(std::string data_to_save)
         // For writing data first time, erase memory of current (i.e. = 0) page
         if(saved_pages_counter_ == 0)
         {
-          // printf("storage::SaveStringInFlash erase first sector \n");
+          printf("storage::SaveStringInFlash erase first sector \n");
             ints = save_and_disable_interrupts();
             flash_range_erase(offset, FLASH_SECTOR_SIZE);
             restore_interrupts(ints);
@@ -99,7 +102,7 @@ bool Storage::SaveStringInFlash(std::string data_to_save)
 }
 
 /**
- * @brief Converts sensors data into string. Is the string's size is bigger than FLASH_PAGE_SIZE, then it will be written to the FLASH memory.
+ * @brief Converts sensors data into string. If the string's size is bigger than FLASH_PAGE_SIZE, then it will be written to the FLASH memory.
  * Otherwise the string will cached and waiting for next data, untill it's size will be bigger than FLASH_PAGE_SIZE.
  * 
  * @param sensors_data Data from sensors, which should be saved in memory.
@@ -108,7 +111,7 @@ bool Storage::SaveStringInFlash(std::string data_to_save)
  */
 int Storage::UpdateDataToStore(SensorsData& sensors_data, bool include_gps)
 {
-  // printf("storage::UpdateDataToStore - include_gps=%b\n", include_gps);
+    printf("storage::UpdateDataToStore - include_gps = %b\n", include_gps);
 
     data_to_store_ += "|";
     if(include_gps)
@@ -128,9 +131,13 @@ int Storage::UpdateDataToStore(SensorsData& sensors_data, bool include_gps)
         // data_to_store_ += std::to_string(sensors_data.distance) + ";";
     }
 
+    // printf("storage::UpdateDataToStore - data_to_store_ = %s\n", data_to_store_.c_str());
+
     std::string compass_coordinates = std::to_string(sensors_data.mag_x) + ";" + std::to_string(sensors_data.mag_y) + ";" + std::to_string(sensors_data.mag_z);
     data_to_store_ += compass_coordinates;
     data_to_store_ += ";";
+    
+    // printf("storage::UpdateDataToStore - 2 data_to_store_ = %s\n", data_to_store_.c_str());
 
     std::string accel_str = std::to_string(sensors_data.accelerometer[0]) + ";" + std::to_string(sensors_data.accelerometer[1]) + ";" + std::to_string(sensors_data.accelerometer[2]);
     std::string gyr_str = std::to_string(sensors_data.gyroscope[0]) + ";" + std::to_string(sensors_data.gyroscope[1]) + ";" + std::to_string(sensors_data.gyroscope[2]);
@@ -138,18 +145,18 @@ int Storage::UpdateDataToStore(SensorsData& sensors_data, bool include_gps)
     data_to_store_ += ";";
     data_to_store_ += gyr_str;
 
-  // printf("storage::UpdateDataToStore - data_to_store_=%s\n", data_to_store_.c_str());
+    // printf("storage::UpdateDataToStore - 3 data_to_store_ = %s\n", data_to_store_.c_str());
 
     if(data_to_store_.length() > FLASH_PAGE_SIZE)
     {
         std::string string_to_store = data_to_store_.substr(0, FLASH_PAGE_SIZE);
         data_to_store_.erase(0, FLASH_PAGE_SIZE);
-      // printf("storage::UpdateDataToStore - string sent to storage:%s\n", string_to_store.c_str());
+        printf("storage::UpdateDataToStore - string sent to storage: %s\n", string_to_store.c_str());
         sleep_ms(10);
         bool success = SaveStringInFlash(string_to_store);
         if(!success)
         {
-          // printf("ERROR: flash memory full\n");
+          printf("ERROR: flash memory full\n");
 
             return -1;
         }
@@ -222,7 +229,7 @@ void Storage::EraseData()
  */
 void Storage::FullEraseData()
 {
-  // printf("storage::FullEraseData 1.0 \n");
+  printf("storage::FullEraseData 1.0 \n");
 
     int max_sectors = kMaxPages_/16;
     uint32_t offset{kFlashStorageStartOffset_};

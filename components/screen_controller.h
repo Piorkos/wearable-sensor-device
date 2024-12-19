@@ -3,9 +3,10 @@
 
 #include <string.h>
 #include "../core/config.h"
-#include "../drivers/display/display.h"
-#include "../drivers/display/font_12x16.h"
-#include "../drivers/display/font_16x20.h"
+#include "../drivers/display/sharp-mip/display.h"
+#include "../drivers/display/sharp-mip/sharp-mip/fonts/font_8x10.h"
+#include "../drivers/display/sharp-mip/sharp-mip/fonts/font_16x20.h"
+#include "../drivers/display/sharp-mip/sharp-mip/fonts/font_24x30.h"
 
 class ScreenController
 {

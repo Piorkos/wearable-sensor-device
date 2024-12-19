@@ -3,6 +3,8 @@
 Compass::Compass(i2c_inst_t *i2c)
 :i2c_{i2c}
 {
+    printf("Compass Constructor \n");
+
     uint8_t buf[] = {CTRL_1, 0x57};
     i2c_write_blocking(i2c_, LSM303D_I2C_ADDR, buf, 2, false);
     buf[0] = CTRL_2;
@@ -32,13 +34,15 @@ Compass::~Compass()
  */
 void Compass::Read(SensorsData& sensors_data)
 {
+    printf("Compass::Read\n");
+
     uint8_t bufferM[1];
     uint8_t bufferL[1];
     i2c_write_blocking(i2c_, LSM303D_I2C_ADDR, &MAG_X_MSB, 1, true);
     int bytesRead = i2c_read_blocking(i2c_, LSM303D_I2C_ADDR, bufferM, 1, false);
     if(bytesRead == PICO_ERROR_GENERIC)
     {
-      // printf("COMPAS READING ERROR, bytes= %d \n", bytesRead);
+      printf("COMPAS READING ERROR, bytes= %d \n", bytesRead);
     }
     i2c_write_blocking(i2c_, LSM303D_I2C_ADDR, &MAG_X_LSB, 1, true);
     i2c_read_blocking(i2c_, LSM303D_I2C_ADDR, bufferL, 1, false);
@@ -53,6 +57,8 @@ void Compass::Read(SensorsData& sensors_data)
     i2c_write_blocking(i2c_, LSM303D_I2C_ADDR, &MAG_Z_LSB, 1, true);
     i2c_read_blocking(i2c_, LSM303D_I2C_ADDR, bufferL, 1, false);
     sensors_data.mag_z = CombineTwoRegisters(bufferM[0], bufferL[0]);
+
+    printf("Mag X: %d, Mag Y: %d, Mag Z: %d \n", sensors_data.mag_x, sensors_data.mag_y, sensors_data.mag_z);
 }
 
 /**
@@ -66,12 +72,12 @@ int Compass::TestConnection()
     int bytes_read = i2c_read_blocking(i2c_, LSM303D_I2C_ADDR, &buffer, 1, false);
     if(bytes_read == PICO_ERROR_GENERIC)
     {
-      // printf("COMPAS READING ERROR - NO CONNECTION \n");
+      printf("COMPAS READING ERROR - NO CONNECTION \n");
         return -2;
     }
     else if(bytes_read == PICO_ERROR_TIMEOUT)
     {
-      // printf("COMPAS READING ERROR - TIMEOUT \n");
+      printf("COMPAS READING ERROR - TIMEOUT \n");
         return -1;
     }
     return 1;
